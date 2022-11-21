@@ -1,4 +1,20 @@
 ### dom
+<details><summary>html</summary>
+ 
+ ```html
+<!DOCTYPE html>
+<head><meta charset="utf-8"><title></title>
+<style>
+</style>
+</head>
+<body onload="init()">
+<script>
+function init(){}
+ </script>
+</body></html>
+```
+</details>
+
 <details><summary>general</summary>
 
 ```js
