@@ -40,6 +40,16 @@ window.ondrop=function(e){pd(e);
 })}}
 ```
 </details>
+ 
+<details><summary>fetch multiple</summary>
+ 
+```js
+function fetchall(l,f){let x=[],F={}
+ l.forEach(function(u,i){x.push(fetch(u).then(r=>r.arrayBuffer()).then(r=>F[l[i]]=r))})
+ Promise.all(x).then(function(){f(F)})
+}
+```
+</details>
 
 ### compress
 <details><summary>u8=compress(u8);u8=uncompress(u8) (snappy)</summary>
