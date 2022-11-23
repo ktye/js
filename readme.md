@@ -55,10 +55,10 @@ function fetchall(l,f){let x=[],F={}
 <details><summary>lz4 (uncompress)</summary>
 
 ```js
-function lz(x){let i=7,n,r=[],S=-(1<<31),R=(x,a,n)=>{for(let j=0;j<n;j++)r.push(x[a+j]);return n},
- d=(x,n)=>{let t,c,o,C=()=>{if(c===15)do{c+=x[i]}while(x[i++]==255)};
-  while(i<n){t=x[i++];c=t>>4;C();i+=R(x,i,c);if(i<n){c=t&15;o=r.length-(x[i++]|x[i++]<<8);C();R(r,o,4+c)}}}
- while(n=x[i++]|x[i++]<<8|x[i++]<<16|x[i++]<<24)(n&S)?i+=R(x,i,n&~S):d(x,i+n);return new Uint8Array(r)}
+function lz(x){let i=7,j,n,t,c,o,r=[],S=-(1<<31),R=(x,a,n)=>{for(j=0;j<n;j++)r.push(x[a+j]);return n},
+ h=()=>x[i++]|x[i++]<<8,C=()=>{if(c===15)do{c+=x[i]}while(x[i++]==255)},
+ d=(x,n)=>{while(i<n){t=x[i++];c=t>>4;C();i+=R(x,i,c);if(i<n){c=t&15;o=r.length-h();C();R(r,o,4+c)}}}
+ while(n=h()|h()<<16)(n&S)?i+=R(x,i,n&~S):d(x,i+n);return new Uint8Array(r)}
 ```
 </details>
 
