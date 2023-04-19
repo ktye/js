@@ -40,6 +40,19 @@ window.ondrop=function(e){pd(e);
 })}}
 ```
 </details>
+
+<details><summary>download</summary>
+
+```html
+<a id="dl" style="display:none"></a>
+```
+```js
+let x=new Blob([u],{type:"application/octet-stream"}) //u:uint8array
+dl.href=URL.createObjectURL(x)
+dl.download="filename.txt"
+dl.click()
+```
+</details>
  
 <details><summary>fetch multiple</summary>
  
