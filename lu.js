@@ -1,3 +1,4 @@
+
 let solve=(A,b)=>{let P=lup(A);return lupsolve(A,P,b)} //A:complex(n x 2*n) modified
 let lup=(A, P)=>{let n=A.length;P=Array(n).fill(0).map((_,i)=>i)
  for(let i=0;i<n;i++){
