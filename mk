@@ -1,6 +1,3 @@
-j="lu.js qr.js fft.js"
-m="sin cos atan2 sqrt abs hypot log log10 log2 exp min max"
-
 cat << EOF
 <!DOCTYPE html>
 <head><meta charset="utf-8">
@@ -19,13 +16,7 @@ body{overflow:hidden;height:100dvh;display:grid;grid-template-rows:auto 1fr}
 <script>
 EOF
 
-echo -n "let pi=Math.PI"
-for x in $m; do
- echo -n ",$x=Math.$x"
-done
-for f in $j; do
- awk '/^$/{++x}{if(1==x)print}' $f
-done
+cat math.js
 
 cat << EOF 
 </script>
@@ -57,9 +48,7 @@ window.onunhandledrejection=e=>{o.textContent+="\n"+e.reason+"\n";console.log(e.
 <pre id="o">
 EOF
 
-for f in $j; do 
- awk '/^$/{++x}{if(1==x)print}' $f | sed -n 's/^let \([a-z][a-z0-9]*\)=.*/\1/p' | tr '\n' ' '
-done
+sed 1d math.js | sed -n 's/^let \([a-z][a-z0-9]*\)=.*/\1/p' | tr '\n' ' '
 
 cat << EOF
 </pre></pre>

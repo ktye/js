@@ -1,13 +1,29 @@
-let sqrt=Math.sqrt,abs=Math.abs,hypot=Math.hypot,sign=Math.sign
+let sin=Math.sin,cos=Math.cos,atan2=Math.atan2,sqrt=Math.sqrt,abs=Math.abs,hypot=Math.hypot,log=Math.log,log10=Math.log10,log2=Math.log2,exp=Math.exp,sign=Math.sign,min=Math.min,max=Math.max;const pi=Math.PI
 let zdiv=(xr,xi,yr,yi)=>{let r=0,d=0,e=0,f=0;if(abs(yr)>=abs(yi)){r=yi/yr;d=yr+r*yi;e=(xr+xi*r)/d;f=(xi-xr*r)/d}else{r=yr/yi;d=yi+r*yr;e=(xr*r+xi)/d;f=(xi*r-xr)/d};return[e,f]}
 let norm=z=>{let s=0,r=0,t;for(let i=0;i<z.length;i++){let x=z[i];if(x){x=abs(x);if(s<x){t=s/x;r=1+r*t*t;s=x}else{t=x/s;r+=t*t}}};return s*sqrt(r)} //s*s*r if no sqrt
 let norm2=z=>{let s=0,r=0,t;for(let i=0;i<z.length;i++){let x=z[i];if(x){x=abs(x);if(s<x){t=s/x;r=1+r*t*t;s=x}else{t=x/s;r+=t*t}}};return s*s*r}
 let eyez=n=>new Array(n).fill(0).map((_,i)=>{let r=new Float64Array(2*n);r[2*i]=1;return r})
 let grade=(x, r)=>Array.from(x.keys()).sort((a,b)=>x[a]-x[b])
 
-let mat=a=>a.map(  v=>Array.from(v).map(x=>x.toFixed(2)).join(" ") ).join("\n")
-
-let lsq=(A,b)=>qrsolve(qr(A),b)  //A:list of columns(complex): [ Float64Array([r,i,r,i,..]), .. ]
+let solve=(A,b)=>{let P=lup(A);return lupsolve(A,P,b)} //A:list of complex rows: [Float64Array([r,i,r,i,..]), row2, ..]
+let lup=(A, P)=>{let n=A.length;P=Array(n).fill(0).map((_,i)=>i)
+ for(let i=0;i<n;i++){
+  let mx=0,mi=0;for(let k=i;k<n;k++){let a=A[k][2*i]*A[k][2*i]+A[k][2*i+1]*A[k][2*i+1];if(a>mx){mx=a;mi=k}}
+  if(mi!=i){let t=P[i];P[i]=P[mi];P[mi]=t;t=A[i];A[i]=A[mi];A[mi]=t}
+  let a=A[i][2*i],b=A[i][2*i+1],c=1/(a+b*b/a),d=-1/(b+a*a/b)
+  for(let j=1+i;j<n;j++){a=A[j][2*i];b=A[j][2*i+1];A[j][2*i]=a*c-b*d;A[j][2*i+1]=a*d+b*c;a=A[j][2*i];b=A[j][2*i+1]
+   for(let k=2+2*i;k<2*n;k+=2){let e=A[i][k],f=A[i][1+k];A[j][k]-=a*e-b*f;A[j][1+k]-=a*f+b*e}}}
+ return P} 
+let lupsolve=(A,P,b)=>{let n=A.length,x=new Float64Array(2*n)
+ for(let i=0;i<n;i++){let xr=b[2*P[i]],xi=b[1+2*P[i]]
+  for(let k=0;k<2*i;k+=2){let a=A[i][k],b=A[i][1+k],c=x[k],d=x[1+k];xr-=a*c-b*d;xi-=a*d+b*c}
+  x[2*i]=xr;x[2*i+1]=xi}
+ for(let i=n-1;i>=0;i--){let xr=x[2*i],xi=x[2*i+1]
+  for(let k=2+2*i;k<2*n;k+=2){let a=A[i][k],b=A[i][1+k],c=x[k],d=x[1+k];xr-=a*c-b*d;xi-=a*d+b*c}
+  let a=A[i][2*i],b=A[i][2*i+1],c=1/(a+b*b/a),d=-1/(b+a*a/b);x[2*i]=xr*c-xi*d;x[2*i+1]=xr*d+xi*c
+ };return x}
+ 
+let lsq=(A,b)=>qrsolve(qr(A),b)  //A:list of complex columns: [Float64Array([r,i,r,i,..]), col2, ..]
 let qr=A=>{const n=A.length,m2=A[0].length
  let d=new Float64Array(2*n)
  for(let j=0;j<n;j++){let j2=2*j,j3=1+j2,Aj=A[j]
@@ -25,11 +41,12 @@ let qrsolve=(Q,x)=>{let[A,d]=Q,m2=A[0].length
   for(let j=1+i;j<A.length;j++){const j2=2*j,j3=1+j2;x[i2]-=A[j][i2]*x[j2]-A[j][i3]*x[j3];x[i3]-=A[j][i2]*x[j3]+A[j][i3]*x[j2]}
   let[a,b]=zdiv(x[i2],x[i3],d[i2],d[i3]);x[i2]=a;x[i3]=b}
  return b.subarray(0,2*A.length)}
-let svd=A=>{
+
+let svd=A=>{ //A:list of complex columns (see qr)
  let svq=A=>{let[h,d]=qr(A),n=A.length,m2=A[0].length,r=Array(A.length).fill([]).map(x=>new Float64Array(2*A.length).fill(0));for(let i=1;i<h.length;i++){let ri=r[i],hi=h[i];for(let k=0;k<2*i;k+=2){ri[k]=hi[k];ri[1+k]=hi[1+k]}};for(let i=0;i<h.length;i++){r[i][2*i]=d[2*i];r[i][1+2*i]=d[1+2*i]};
   let Q=x=>{let y=new Float64Array(m2);y.set(x);for(let i=0;i<n;i++){let j=n-1-i,hj=h[j],a=0,b=0;for(let k2=m2-2-2*i;k2<m2;k2+=2){const k3=1+k2;a+=hj[k2]*y[k2]+hj[k3]*y[k3];b+=hj[k2]*y[k3]-hj[k3]*y[k2]};for(let k2=m2-2-2*i;k2<m2;k2+=2){const k3=1+k2;y[k2]-=a*hj[k2]-b*hj[k3];y[k3]-=a*hj[k3]+b*hj[k2]}};return y}
   let[u,s,v]=svd(r);return[u.map(Q),s,v]}
- if(A[0].length==2*A.length)return svq(A)
+ if(A[0].length>2*A.length)return svq(A) //using qr decomposition for slender input.
  let n=A.length,V=eyez(n)
  let d=(x,y)=>{let a=0,b=0;for(let r=0;r<x.length;r+=2){const i=1+r;a+=x[r]*y[r]+x[i]*y[i];b+=x[r]*y[i]-x[i]*y[r]};return[a,b]}
  let J=(x,y,zr,zi)=>{let a=hypot(zr,zi),q=(norm2(y)-norm2(x))/(2*a),t=sign(q)/(abs(q)+sqrt(1+q*q)),c=1/sqrt(1+t*t);return[c,t*c*zr/a,t*c*zi/a]}
@@ -38,21 +55,10 @@ let svd=A=>{
  F(A);let s=A.map(norm);for(let i=0;i<A.length;i++){let t=1/s[i],Ai=A[i];for(let k=0;k<Ai.length;k++)Ai[k]*=t}
  let g=grade(s);g.reverse();return[A.map((_,i)=>A[g[i]]),s.map((_,i)=>s[g[i]]),V.map((_,i)=>V[g[i]])]}
 
+let fft=(x,ini)=>{ //fft([1,0,2,0,3,0,4,0,5,0,6,0,7,0,8,0]) or reuse: f=fft(8);fft([1,0,2,0,3,0,4,0,5,0,6,0,7,0,8,0],f)
+ let init=N=>{let l=log2(N),P=Array(8).fill(0),n=1,S=new Float64Array(N),C=new Float64Array(N);for(let p=0;p<l;p++){for(let i=0;i<n;i++){P[i]<<=1;P[i+n]=1+P[i]};n<<=1};for(let i=0;i<N;i++){const p=-2*pi*i/N;C[i]=cos(p);S[i]=sin(p)};return[l,P,C,S,N]}
+ let perm=(x,P)=>{P.forEach((p,i)=>{if(i<p){const a=2*i,b=1+a,c=2*p,d=1+c,A=x[a],B=x[b];x[a]=x[c];x[b]=x[d];x[c]=A;x[d]=B}})}
+ if("number"==typeof x)return init(x);let[l,P,C,S,N]=ini?ini:init(x.length/2);perm(x,P);let n=1,s=N
+ for(let p=1;p<=l;p++){s>>=1;for(let b=0;b<s;b++){const o=2*b*n;for(let k=0;k<n;k++){const i=(k+o)<<1,j=i+(n<<1),ks=k*s,kn=s*(k+n);let xi0=x[i],xi1=x[1+i],xj0=x[j];x[i]+=C[ks]*x[j]-S[ks]*x[1+j];x[1+i]+=C[ks]*x[1+j]+S[ks]*x[j];x[j]=xi0+C[kn]*x[j]-S[kn]*x[1+j];x[1+j]=xi1+C[kn]*x[1+j]+S[kn]*xj0}};n<<=1}
+ return x}
 
-let A=[[0.939692,0.34202,1.532088,1.285575,0.086824,-0.492403,2.5,3.1],[0.719339,0.694658,-1.231322,1.576021,2.598076,-1.5,-2.5,-3.2],[1.677341,1.089278,-0.984807,0.173648,2.,0.,6.0,2.1]].map(x=>new Float64Array(x))
-let Q=svd(A)
-console.log("U",mat(Q[0]))
-console.log("S",Q[1])
-console.log("V",mat(Q[2]))
-
-//let A=[new Float64Array([1,2,3,4,5,6]), new Float64Array([-2,5,-3,-5,2,3])]
-//let b=new Float64Array([3,2,-5,2,1,2])
-//console.log(lsq(A,b))
-console.log("qr")
-
-/*
-svq:{q:qr x;h:q 0;r:q 1;n:q 2;m:q 3;o:0|(1+&n)@!m
- /QMUL:x:o*m#x;K:,m-1;j:n-1;while[ j<n;y[K]-:(+/(conj H[j;K])*y K)*H[j;K];K:1_K;j+:1]
- qmul:{x:o*m#x;K:,m-1;j:n-1;while[-1<j;x[K]-:(+/(conj h[j;K])*x K)*h[j;K];K:(-1+*K),K;j-:1];x} /Q*
- d:{x*(!#x)=/!#x}
- (,qmul'U:D 0),1_D:svd R:ll[`R](d r)+(n#'h)*i</i:!n} */
