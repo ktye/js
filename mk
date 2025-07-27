@@ -7,8 +7,8 @@ cat << EOF
 <style>*{font-family:monospace;margin:0;border:none;padding:0;}
 body{overflow:hidden;height:100dvh;display:grid;grid-template-rows:auto 1fr}
 [contenteditable="true"]{background-color:#000;color:#fff;border:none;outline:none}
-#i{flex-grow:1;min-height:4em;width:100vw;top:0;overflow:auto;resize:vertical}
-#o{flex-grow:1;min-height:4em;background-color:#fff;width:100vw;bottom:0;overflow:auto}
+#_i{flex-grow:1;min-height:4em;width:100vw;top:0;overflow:auto;resize:vertical}
+#_o{flex-grow:1;min-height:4em;background-color:#fff;width:100vw;bottom:0;overflow:auto}
 .b:hover{cursor:pointer}
 .w{background:white;color:black}
 @media(orientation:portrait){*{font-size:x-large}}
@@ -16,39 +16,39 @@ body{overflow:hidden;height:100dvh;display:grid;grid-template-rows:auto 1fr}
 <script>
 EOF
 
-cat math.js
+cat math.js bench.js
 
 cat << EOF 
 </script>
 <script>
 
 let cols=()=>Math.floor(document.body.getBoundingClientRect().width/cw),
-_jdo=s=>{s=i.innerText.trim();
+_jdo=s=>{s=_i.innerText.trim();
  if(s){
-  o.textContent=String(eval(s));
+  _o.textContent=String(eval(s));
 }}
 
 window.init=()=>{_jdo()
- let f=window.location.hash;if(f)i.innerText=decodeURIComponent(f.slice(1))
- i.onblur=e=>{if(!o.textContent)_jdo()}
- i.oninput=e=>o.textContent=""
+ let f=window.location.hash;if(f)_i.innerText=decodeURIComponent(f.slice(1))
+ _i.onblur=e=>{if(!_o.textContent)_jdo()}
+ _i.oninput=e=>_o.textContent=""
 }
 window.oncontextmenu=e=>{e.preventDefault();e.stopPropagation();let s=window.getSelection();
  if(s.toString().length)lastsel=s.getRangeAt(0) //rightclick sometimes clears the current selection
  else{s.removeAllRanges();if(lastsel)s.addRange(lastsel)}
  window.find(s.toString(),false,false,true);lastsel=window.getSelection().getRangeAt(0)}
-window.onerror=(m,s,l,c,e)=>{o.textContent+="\n"+s+m}
-window.onunhandledrejection=e=>{o.textContent+="\n"+e.reason+"\n";console.log(e.reason)}
+window.onerror=(m,s,l,c,e)=>{_o.textContent+="\n"+s+m}
+window.onunhandledrejection=e=>{_o.textContent+="\n"+e.reason+"\n";console.log(e.reason)}
 
 </script>
 </head>
 
 <body onload="window.init()">
-<pre id="i" contenteditable="true" spellcheck="false" autofocus></pre>
-<pre id="o">
+<pre id="_i" contenteditable="true" spellcheck="false" autofocus></pre>
+<pre id="_o">
 EOF
 
-sed 1d math.js | sed -n 's/^let \([a-z][a-z0-9]*\)=.*/\1/p' | tr '\n' ' '
+cat math.js bench.js | sed 1d | sed -n 's/^let \([a-z][a-z0-9]*\)=.*/\1/p' | tr '\n' ' '
 
 cat << EOF
 </pre></pre>
