@@ -27,6 +27,12 @@ func main() {
 	M("A", A)
 	lub(A)
 	M("B", A)
+	x := make([]complex128, 7)
+	for i := range x {
+		x[i] = complex(1,2)
+	}
+	x = lubsolve(A, x)
+	V("x",x)
 }
 func V(s string, b []complex128) {
 	fmt.Println(s)
@@ -49,17 +55,13 @@ func lub(B [][]complex128) {
 	h := (m-1)/2
 	for j := range n {
 		p := B[h][j]
-		fmt.Println("a/b", h, j, real(p), imag(p))
 		for k := 1+h; k<m; k++ {
 			q := B[k][j]/p
-			fmt.Println("p/q",k,real(q),imag(q))
 			for i := 1; i<m; i++ {
 				if h-i >= 0 && i+j < n {
-					fmt.Println("Bij", k-i, j+i)
 					B[k-i][j+i] -= q*B[h-i][j+i]
 				}
 			}
-		fmt.Println("bkj", k, j, real(q), imag(q))
 			B[k][j] = q
 		}
 	}

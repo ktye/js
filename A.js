@@ -3,6 +3,11 @@ let A=new Array(5).fill([]);A=A.map((_,i)=>new Float64Array(14))
 let k=0;for(let i=0;i<A.length;i++)for(let j=0;j<A[i].length;j++)A[i][j]=a[k++]
 
 lub(A)
+let x=new Float64Array([1,2,1,2,1,2,1,2,1,2,1,2,1,2])
+x=lubsolve(A,x)
+
+console.log(A.map(String))
+console.log("x", x)
 
 // deno repl --eval-file=math.js --eval-file=A.js
 // vs

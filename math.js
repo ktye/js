@@ -25,22 +25,19 @@ let lupsolve=(A,P,b)=>{let n=A.length,x=new Float64Array(2*n)
 
 let lub=A=>{let m=A.length,n2=A[0].length,h=(m-1)/2
  for(let j=0;j<n2;j+=2){let a=A[h][j],b=A[h][1+j]
-	 console.log("a/b",h,j/2,a,b)
   for(let k=1+h;k<m;k++){let[p,q]=zdiv(A[k][j],A[k][1+j],a,b);
-         console.log("p/q",k,p,q)
    for(let i=1;i<m;i++){let i2=2*i;if(h-i>=0&&j+i2<n2){
-	   console.log("Bij",k-i,(j+i2)/2)
-	   let c=A[h-i][j+i2],d=A[h-i][j+i2+1];A[k-i][j-i2]-=p*c-q*d;A[k-i][1+j-i2]-=p*d+q*c}}
-   console.log("bkj",k,j/2,p,q)
+	   let c=A[h-i][j+i2],d=A[h-i][j+i2+1];
+	   A[k-i][j+i2]-=p*c-q*d;A[k-i][1+j+i2]-=p*d+q*c}}
    A[k][j]=p;A[k][j+1]=q}};return A}
-let lubsolve=(A,b)=>{let m=A.length,n=A[0].length/2,h=(m-1)/2,x=new Float64Array(2*n)
+let lubsolve=(A,b)=>{let m=A.length,n=A[0].length/2,h=(m-1)/2,x=b.map(x=>x)
  for(let i=0;i<n;i++){let i2=2*i,i3=1+i2
   for(let k=i-h;k<i;k++){let j=i-k+h,k2=2*k,k3=1+k2
    if(j>=0&&j<m&&k>=0){let a=A[j];x[i2]-=a[k2]*x[k2]-a[k3]*x[k3];x[i3]-=a[k3]*x[k2]+a[k2]*x[k3]}}}
  for(let i=n-1;i>=0;i--){let i2=2*i,i3=1+i2
   for(let k=1;k<=h;k++){let k2=i2+2*k,k3=1+k2
    if(h+k<m&&i+k<n){let a=A[h-k];x[i2]-=a[k2]*x[k2]-a[k3]*x[k3];x[i3]-=a[k2]*x[k3]+a[k2]*x[k3]}}
-  let[p,q]=zdiv(x[i2],x[i3],A[h][i2],A[h][i3]);x[i2]=p;x[i3]=q};return b}
+  let[p,q]=zdiv(x[i2],x[i3],A[h][i2],A[h][i3]);x[i2]=p;x[i3]=q};return x}
  
 let lsq=(A,b)=>qrsolve(qr(A),b)  //A:list of complex columns: [Float64Array([r,i,r,i,..]), col2, ..]
 let qr=A=>{const n=A.length,m2=A[0].length
