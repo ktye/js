@@ -25,8 +25,13 @@ let lupsolve=(A,P,b)=>{let n=A.length,x=new Float64Array(2*n)
 
 let lub=A=>{let m=A.length,n2=A[0].length,h=(m-1)/2
  for(let j=0;j<n2;j+=2){let a=A[h][j],b=A[h][1+j]
-  for(let k=1+h;k<m;k++){let[p,q]=zdiv(A[k][j],A[k][1+j],a,b)
-   for(let i=1;i<m;i++){let i2=2*i;if(h-i>=0&&j+i2<n2){let c=A[h-i][j+i2],d=A[h-i][j+i2+1];A[k-i][j-i2]-=p*c-q*d;A[k-i][j-i2+1]-=p*d+q*c}}
+	 console.log("a/b",h,j/2,a,b)
+  for(let k=1+h;k<m;k++){let[p,q]=zdiv(A[k][j],A[k][1+j],a,b);
+         console.log("p/q",k,p,q)
+   for(let i=1;i<m;i++){let i2=2*i;if(h-i>=0&&j+i2<n2){
+	   console.log("Bij",k-i,(j+i2)/2)
+	   let c=A[h-i][j+i2],d=A[h-i][j+i2+1];A[k-i][j-i2]-=p*c-q*d;A[k-i][1+j-i2]-=p*d+q*c}}
+   console.log("bkj",k,j/2,p,q)
    A[k][j]=p;A[k][j+1]=q}};return A}
 let lubsolve=(A,b)=>{let m=A.length,n=A[0].length/2,h=(m-1)/2,x=new Float64Array(2*n)
  for(let i=0;i<n;i++){let i2=2*i,i3=1+i2
