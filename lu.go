@@ -13,7 +13,7 @@ func main() {
 	b, _, _ = bytes.Cut(b, []byte{10})
 	b = b[7:len(b)-1]
 	v := strings.Split(string(b), ",")
-	fmt.Println("len v", len(v))
+	//fmt.Println("len v", len(v))
 	A := make([][]complex128, 5)
 	k := 0
 	atof := func(s string) (f float64) { f, _ = strconv.ParseFloat(s, 64); return f }
@@ -24,9 +24,9 @@ func main() {
 			k += 2
 		}
 	}
-	M("A", A)
+	//M("A", A)
 	lub(A)
-	M("B", A)
+	//M("B", A)
 	x := make([]complex128, 7)
 	for i := range x {
 		x[i] = complex(1,2)

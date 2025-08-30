@@ -6,7 +6,7 @@ lub(A)
 let x=new Float64Array([1,2,1,2,1,2,1,2,1,2,1,2,1,2])
 x=lubsolve(A,x)
 
-console.log(A.map(String))
+//console.log(A.map(String))
 console.log("x", x)
 
 // deno repl --eval-file=math.js --eval-file=A.js
