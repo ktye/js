@@ -36,6 +36,11 @@ let lubsolve=(A,b)=>{let m=A.length,n=A[0].length/2,h=(m-1)/2,x=b.map(x=>x)
   for(let k=1;k<=h;k++){let k2=i2+2*k,k3=1+k2
    if(h+k<m&&i+k<n){let a=A[h-k];x[i2]-=a[k2]*x[k2]-a[k3]*x[k3];x[i3]-=a[k2]*x[k3]+a[k3]*x[k2]}}
   let[p,q]=zdiv(x[i2],x[i3],A[h][i2],A[h][i3]);x[i2]=p;x[i3]=q};return x}
+
+let chol=A=>{let n=A.length,i,j,k,s;for(i=0;i<n;i++){for(j=0;j<=i;j++){s=A[i][j];for(k=0;k<j;k++)s-=A[i][k]*A[j][k];A[i][j]=(i>j)?s/A[j][j]:sqrt(s)}};return A}
+let chob=A=>{let m=A.length,n=A[0].length,h=(m-1)/2,i,j,k,s;for(i=0;i<n;i++){for(j=max(0,i-h);j<=i;j++){s=A[h+i-j][j];for(k=max(0,i-h);k<j;k++)s-=A[h+i-k][k]*A[h+j-k][k];A[h+i-j][j]=i>j?s/A[h][j]:sqrt(s)}};return A}
+let cholsolve=(L,b)=>{let n=L.length,i,j;for(i=0;i<n;i++){for(j=0;j<i;j++)b[i]-=L[i][j]*b[j];b[i]/=L[i][i]};for(i=n-1;i>=0;i--){for(j=1+i;j<n;j++)b[i]-=L[j][i]*b[j];b[i]/=L[i][i]};return b;}
+let chobsolve=(L,b)=>{let m=L.length,n=L[0].length,h=(m-1)/2,i,j;for(i=0;i<n;i++){for(j=max(0,i-h);j<i;j++)b[i]-=L[h+i-j][j]*b[j];b[i]/=L[h][i]};for(i=n-1;i>=0;i--){for(j=1+i;j<min(i+h+1,n);j++)b[i]-=L[h+j-i][i]*b[j];b[i]/=L[h][i]};return b;}
  
 let lsq=(A,b)=>qrsolve(qr(A),b)  //A:list of complex columns: [Float64Array([r,i,r,i,..]), col2, ..]
 let qr=A=>{const n=A.length,m2=A[0].length
