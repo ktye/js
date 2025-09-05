@@ -41,6 +41,97 @@ let chol=A=>{let n=A.length,i,j,k,s;for(i=0;i<n;i++){for(j=0;j<=i;j++){s=A[i][j]
 let chob=A=>{let m=A.length,n=A[0].length,h=(m-1)/2,i,j,k,s;for(i=0;i<n;i++){for(j=max(0,i-h);j<=i;j++){s=A[h+i-j][j];for(k=max(0,i-h);k<j;k++)s-=A[h+i-k][k]*A[h+j-k][k];A[h+i-j][j]=i>j?s/A[h][j]:sqrt(s)}};return A}
 let cholsolve=(L,b)=>{let n=L.length,i,j;for(i=0;i<n;i++){for(j=0;j<i;j++)b[i]-=L[i][j]*b[j];b[i]/=L[i][i]};for(i=n-1;i>=0;i--){for(j=1+i;j<n;j++)b[i]-=L[j][i]*b[j];b[i]/=L[i][i]};return b;}
 let chobsolve=(L,b)=>{let m=L.length,n=L[0].length,h=(m-1)/2,i,j;for(i=0;i<n;i++){for(j=max(0,i-h);j<i;j++)b[i]-=L[h+i-j][j]*b[j];b[i]/=L[h][i]};for(i=n-1;i>=0;i--){for(j=1+i;j<min(i+h+1,n);j++)b[i]-=L[h+j-i][i]*b[j];b[i]/=L[h][i]};return b;}
+
+let eig=A=>tqli(A,...tred2(A)) //real sym
+let gei=(A,B)=>{let L=chob(B),V=reducb(A,L),x=eig(V);return[x,ltsolve2(L,V)]}  //general evp A,B>0 both real sym
+let tred2=A=>{let l,k,j,i,s,hh,h,g,f,n=A.length,d=new Float64Array(n),e=new Float64Array(n)
+ for(i=n-1;i>0;i--){l=i-1;h=s=0;if(l>0){for(k=0;k<1+l;k++)s+=abs(A[i][k]);if(!s)e[i]=A[i][l];else{for(k=0;k<1+l;k++){A[i][k]/=s;h+=A[i][k]*A[i][k]}
+    f=A[i][l];g=f>0?-sqrt(h):sqrt(h);e[i]=s*g;h-=f*g;A[i][l]=f-g;f=0;for(j=0;j<1+l;j++){A[j][i]=A[i][j]/h;g=0;for(k=0;k<1+j;k++)g+=A[j][k]*A[i][k];for(k=1+j;k<1+l;k++)g+=A[k][j]*A[i][k];e[j]=g/h;f+=e[j]*A[i][j]}
+    hh=f/(h+h);for(j=0;j<1+l;j++){f=A[i][j];e[j]=g=e[j]-hh*f;for(k=0;k<1+j;k++)A[j][k]-=f*e[k]+g*A[i][k]}
+   }}else e[i]=A[i][l];d[i]=h;}
+ d[0]=0;e[0]=0;for(i=0;i<n;i++){l=i;if(d[i]){for(j=0;j<l;j++){g=0;for(k=0;k<l;k++)g+=A[i][k]*A[k][j];for(k=0;k<l;k++)A[k][j]-=g*A[k][i]}};d[i]=A[i][i];A[i][i]=1;for(j=0;j<l;j++)A[j][i]=A[i][j]=0;};return[d,e]}
+let tqli=(A,d,e)=>{let n=A.length,m,l,it,i,k,s,r,p,g,f,dd,c,b
+ for(i=1;i<n;i++)e[i-1]=e[i];e[n-1]=0;for(l=0;l<n;l++){it=0
+  do{for(m=l;m<n-1;m++){dd=abs(d[m])+abs(d[1+m]);if(abs(e[m])+dd==dd)break}
+   if(m!=l){if(30==it++)break;g=(d[1+l]-d[l])/(2*e[l]);r=hypot(g,1);g=d[m]-d[l]+e[l]/(g+(g>0?abs(r):-abs(r)));s=c=1;p=0;
+    for(i=m-1;i>=l;i--){f=s*e[i];b=c*e[i];e[1+i]=(r=hypot(f,g));if(!r){d[1+i]-=p;e[m]=0;break};s=f/r;c=g/r;g=d[1+i]-p;r=(d[i]-g)*s+2*c*b;d[1+i]=g+(p=s*r);g=c*r-b;
+     for(k=0;k<n;k++){f=A[k][1+i];A[k][1+i]=s*A[k][i]+c*f;A[k][i]=c*A[k][i]-s*f;}
+    };if(r==0&&i>=l)continue;d[l]-=p;e[l]=g;e[m]=0;}}while(m!=l);};return d}
+let reduc=(A,L)=>{let i,j,k,x,y,n=A.length                                                                          //overwrite lower A with inv(L)*A*inv(L')
+ for(i=0;i<n;i++){y=L[i][i];for(j=i;j<n;j++){x=A[i][j];for(k=0;k<i;k++)x-=L[i][k]*A[j][k];A[j][i]=x/y}}
+ for(j=0;j<n;j++){for(i=j;i<n;i++){x=A[i][j];if(i>j)for(k=j;k<i;k++)x-=A[k][j]*L[i][k];for(k=0;k<j;k++)x-=A[j][k]*L[i][k];A[i][j]=x/L[i][i]}};return A}
+let reducb=(A,L)=>{let i,j,k,x,y,m=A.length,n=A[0].length,h=(m-1)/2,C=Array(n).fill([]).map(x=>new Float64Array(n)) //return full/lower C = inv(L)*A*inv(L'), L and A are banded
+ for(i=0;i<n;i++)for(j=max(0,i-h);j<min(n,i+h+1);j++)C[i][j]=A[h+i-j][j];
+ for(i=0;i<n;i++){y=L[h][i];for(j=i;j<n;j++){x=C[i][j];for(k=max(0,i-h);k<i;k++)x-=L[h+i-k][k]*C[j][k];C[j][i]=x/y}}
+ for(j=0;j<n;j++){for(i=j;i<n;i++){x=C[i][j];if(i>j)for(k=max(j,i-h);k<i;k++)x-=C[k][j]*L[h+i-k][k];for(k=max(0,i-h);k<j;k++)x-=C[j][k]*L[h+i-k][k];C[i][j]=x/L[h][i]}};return C}
+let ltsolve2=(L,X)=>{let i,j,k,m=L.length,h=(m-1)/2,n=X.length;for(k=0;k<n;k++){for(i=n-1;i>=0;i--){for(j=1+i;j<min(i+h+1,n);j++)X[i][k]-=L[h+j-i][i]*X[j][k];X[i][k]/=L[h][i]}};return X} //L'\X multi rhs, todo flip X
+
+
+
+/*
+let B=[[2.8696,  1.9644,  1.8804,       0,       0,       0],
+       [1.9644,  1.8855,  1.5371,  0.6240,       0,       0],
+       [1.8804,  1.5371,  1.8169,  0.4867,  0.5381,       0],
+       [     0,  0.6240,  0.4867,  1.0908,  0.0995, -0.0741],
+       [     0,       0,  0.5381,  0.0995,  0.8794,  0.3238],
+       [     0,       0,       0, -0.0741,  0.3238,  0.6199]];
+
+
+let A=[[1.9236,  1.3682,  1.7185,       0,       0,       0],
+       [1.3682,  1.5970,  1.7623,  0.8792,       0,       0],
+       [1.7185,  1.7623,  2.1690,  1.0988,  1.8970,       0],
+       [     0,  0.8792,  1.0988,  0.8065,  0.9876,  1.0567],
+       [     0,       0,  1.8970,  0.9876,  2.4705,  2.0915],
+       [     0,       0,       0,  1.0567,  2.0915,  2.6707]];
+
+let L=chol(B);
+console.log("L",L.map(x=>x.map(x=>x.toFixed(3)).join(" ")))
+
+let C=reduc(A,L)
+console.log("C",C.map(x=>x.map(x=>x.toFixed(3)).join(" ")))
+*/
+
+let B=[[     0,       0,  1.8804,  0.6240,  0.5381, -0.0741],
+       [     0,  1.9644,  1.5371,  0.4867,  0.0995,  0.3238],
+       [2.8696,  1.8855,  1.8169,  1.0908,  0.8794,  0.6199],
+       [1.9644,  1.5371,  0.4867,  0.0995,  0.3238,       0],
+       [1.8804,  0.6240,  0.5381, -0.0741,       0,       0]];
+
+
+let A=[[     0,       0,  1.7185,  0.8792,  1.8970,  1.0567],
+       [     0,  1.3682,  1.7623,  1.0988,  0.9876,  2.0915],
+       [1.9236,  1.5970,  2.1690,  0.8065,  2.4705,  2.6707],
+       [1.3682,  1.7623,  1.0988,  0.9876,  2.0915,       0],
+       [1.7185,  0.8792,  1.8970,  1.0567,       0,       0]];
+
+/*
+let L=chob(B);
+console.log("L",L.map(x=>x.map(x=>x.toFixed(3)).join(" ")))
+
+let C=reducb(A,L)
+console.log("C",C.map(x=>x.map(x=>x.toFixed(3)).join(" ")))
+*/
+
+console.log("B",B.map(x=>x.map(x=>x.toFixed(3)).join(" ")))
+console.log("A",A.map(x=>x.map(x=>x.toFixed(3)).join(" ")))
+
+let[e,V]=gei(A,B);
+console.log("e", e);
+console.log("V",V.map(x=>x.map(x=>x.toFixed(3)).join(" ")))
+
+/*
+let A=[[10,1,2,3,4],
+       [1,9,-1,2,-3],
+       [2,-1,7,3,-5],
+       [3,2,3,12,-1],
+       [4,-3,-5,-1,15]];
+let[d,e]=tred2(A)
+console.log("A",A.map(x=>x.map(x=>x.toFixed(3)).join(" ")))
+console.log("d",d)
+console.log("e",e)
+console.log("eigs:", tqli(A,d,e));
+console.log("V",A.map(x=>x.map(x=>x.toFixed(3)).join(" ")))
+*/
  
 let lsq=(A,b)=>qrsolve(qr(A),b)  //A:list of complex columns: [Float64Array([r,i,r,i,..]), col2, ..]
 let qr=A=>{const n=A.length,m2=A[0].length
