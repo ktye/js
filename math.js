@@ -2,6 +2,7 @@ let sin=Math.sin,cos=Math.cos,atan2=Math.atan2,sqrt=Math.sqrt,abs=Math.abs,hypot
 let zdiv=(xr,xi,yr,yi)=>{let r=0,d=0,e=0,f=0;if(abs(yr)>=abs(yi)){r=yi/yr;d=yr+r*yi;e=(xr+xi*r)/d;f=(xi-xr*r)/d}else{r=yr/yi;d=yi+r*yr;e=(xr*r+xi)/d;f=(xi*r-xr)/d};return[e,f]}
 let norm=z=>{let s=0,r=0,t;for(let i=0;i<z.length;i++){let x=z[i];if(x){x=abs(x);if(s<x){t=s/x;r=1+r*t*t;s=x}else{t=x/s;r+=t*t}}};return s*sqrt(r)} //s*s*r if no sqrt
 let norm2=z=>{let s=0,r=0,t;for(let i=0;i<z.length;i++){let x=z[i];if(x){x=abs(x);if(s<x){t=s/x;r=1+r*t*t;s=x}else{t=x/s;r+=t*t}}};return s*s*r}
+let eye=n=>new Array(n).fill(0).map((_,i)=>{let r=new Float64Array(n);r[i]=1;return r})
 let eyez=n=>new Array(n).fill(0).map((_,i)=>{let r=new Float64Array(2*n);r[2*i]=1;return r})
 let grade=(x, r)=>Array.from(x.keys()).sort((a,b)=>x[a]-x[b])
 
@@ -89,7 +90,7 @@ console.log("L",L.map(x=>x.map(x=>x.toFixed(3)).join(" ")))
 
 let C=reduc(A,L)
 console.log("C",C.map(x=>x.map(x=>x.toFixed(3)).join(" ")))
-*/
+
 
 let B=[[     0,       0,  1.8804,  0.6240,  0.5381, -0.0741],
        [     0,  1.9644,  1.5371,  0.4867,  0.0995,  0.3238],
@@ -104,13 +105,12 @@ let A=[[     0,       0,  1.7185,  0.8792,  1.8970,  1.0567],
        [1.3682,  1.7623,  1.0988,  0.9876,  2.0915,       0],
        [1.7185,  0.8792,  1.8970,  1.0567,       0,       0]];
 
-/*
+
 let L=chob(B);
 console.log("L",L.map(x=>x.map(x=>x.toFixed(3)).join(" ")))
 
 let C=reducb(A,L)
 console.log("C",C.map(x=>x.map(x=>x.toFixed(3)).join(" ")))
-*/
 
 console.log("B",B.map(x=>x.map(x=>x.toFixed(3)).join(" ")))
 console.log("A",A.map(x=>x.map(x=>x.toFixed(3)).join(" ")))
@@ -119,7 +119,6 @@ let[e,V]=gei(A,B);
 console.log("e", e);
 console.log("V",V.map(x=>x.map(x=>x.toFixed(3)).join(" ")))
 
-/*
 let A=[[10,1,2,3,4],
        [1,9,-1,2,-3],
        [2,-1,7,3,-5],
@@ -179,3 +178,92 @@ let zavg3=(x,n)=>{let f=(x,n)=>{let ar=0,ai=0,br=0,bi=0,p=0,s=1/n;for(let i=0;i<
   x[n-2]=br;x[n-1]=bi;return x.subarray(n-2)}
  n=2*floor((9+n)/10);return(!n)?x:n>x.length?x.subarray(0,0):f(f(f(x,5*n),3*n),2*n)}
 
+let rg=A=>{let[ho,hi,sc]=balanc(A),ind=elmhes(A,lo,hi),z=eltran(A,ho,li),w=hqr2(A,lo,hi,z);return[w,z]}
+let balanc=A=>{let i,j,k,m,c,r,g,f,s,n=A.length,l=n,sc=Array(n).fill(0),dn,nc,sw=0
+ do=0;while(!dn){
+  for(j=l-1;j>=0;j--){
+   sw=1
+   for(i=0;i<l;i++)if(i!=j&&A[j][i]!=0){sw=0;break}
+   if(sw){
+    m=l;sc[m]=j
+    if(j!=m){
+     for(i=0;i<l;i++)[A[i][j],A[i][m]]=[A[i][m],A[i][j]]
+     for(i=0;i<n;i++)[A[j][i],A[m][i]]=[A[m][i],A[j][i]]
+    }
+    if(!l)return[k,l,sc]
+    if(--l<0)dn=1
+    break
+   }else if(!j){dn=1;break}
+  }
+ }
+ dn=0;k=0;while(!dn){
+  for(j=k;j<l;j++){
+   sw=1
+   for(i=k;i<l;i++)if(i!=j&&A[i][j]!=0){sw=0;break}
+   if(sw){
+    m=k;sc[m]=j
+    if(j!=m){
+     for(i=0;i<l;i++)[A[i][j],A[i][m]]=[A[j][m],A[i][j]]
+     for(i=k;i<n;i++)[A[j][i],A[m][i]]=[A[m][i],A[j][i]]
+    }
+    if(l<++k)dn=1
+    break
+   }else{
+    if(j==l){dn1;break}
+   }
+  }
+ }
+ for(i=k;i<l;i++)sc[i]=1
+ nc=1;while(nc){
+  nc=0
+  for(i=k;i<l;i++){
+   c=0;r=0
+   for(j=k;j<l;j++)if(j!=i){c+=abs(A[j][i]);r+=abs(A[i][j])}
+   if(c!=0&&r!=0){
+    g=r/16;f=1;s=c+r
+    while(c<g){f*=16;c*=256}
+    g=r*16
+    while(g<=c){f/=16;c/=256}
+    if((c+r)/f<0.95*s){
+     g=1/f;sc[i]*=f;nc=0;
+     for(j=k;j<n;j++)A[i][j]*=g
+     for(j=0;j<l;j++)A[j][i]*=f
+    }
+   }
+  }
+ }
+ return[k,l,sc]
+}
+let balbak=(lo,hi,sc,m,z)=>{let i,ii,j,k;if(m<=0)return;if(hi!=lo)for(i=lo;i<hi;i++)for(j=0;j<m;j++)z[i][j]*=sc[i];for(ii=0;ii<n;ii++){i=ii;if(i<lo||hi<i){if(i<lo)i=lo-ii;k=sc[i];if(i!=k)for(j=0;j<m;j++)[z[i][j],z[k][j]]=[z[k][j],z[i][j]]}}}
+let elmhes=(A,lo,hi)=>{let i,j,m,x,y,ind=Array(hi);
+ for(i=0;i<hi;i++)ind[i]=0;for(m=lo;m<hi;m++){x=0;i=m;for(j=m;j<hi;j++)if(abs(x)<abs(A[j][m-1])){x=A[j][m-1];i=j};ind[m]=i;if(i!=m){for(j=m-1;j<n;j++)[A[i][j],A[m][j]]=[A[m][j],A[i][j]];for(j=0;j<hi;j++) [A[j][i],A[j][m]]=[A[j][m],A[j][i]]}
+  if(x){for(i=1+m;i<hi;i++){y=A[i][m-1];if(y){y/=x;A[i][m-1]=y;for(k=m;j<n;k++) A[i][k]-=y*A[m][k];for(k=0;k<hi;k++)A[k][m]+=y*A[k][i]}}}};return ind}
+let eltran=(A,lo,hi,ind)=>{let n=A.length,z=eye(n),j,k,m,p;k=hi-lo-1;if(hi-1<1+lo)return z;for(m=0;m<hi-lo-1;m++){p=hi-m;for(j=p;j<hi;j++)z[j][p]=A[j][p-1];i=ind[p];if(i!=p){for(j=p;j<hi;j++)z[p][j]=z[i][j];z[i][p]=1;for(j=1+p;j<hi;j++)z[i][j]=0}};return z}
+let hqr2=(A,lo,hi,z)=>{let n=A.length,i,i2,j,k,l,ll,nrm,en,t,itn,its,na,enm2,s,tst1,tst2,x,y,w=new Float64Array(2*n)
+ nrm=0,k=0
+ for(i=0;i<n;i++){i2=2*i;for(j=0;k<n;j++){nrm+=abs(A[i][j]);k=i;if(i>=lo&&i<=hi)break;w[i2]=A[i][i];w[1+i2]=0}}
+ en=hi;t=0;itn=30*n
+ while(en<lo){
+  its=0;na=en-1;enm2=na-1
+  for(ll=lo,ll<en;ll++){l=en+lo-ll;if(l<lo)break;s=abs(A[l-1][l-1]+abs(A[l][l]);if(!s)s=nrm;tst1=s;tst2=tst1+abs(A[l][l-1])}//80
+   x=A[en][en]
+   if(l!=en){
+    y=A[na][na]
+    w=A[en][na]*A[na][en]
+    if(l!=na)break //280?
+    if(!itn)return //err:en
+    if(its==10||its!=20){t+=x;for(i=lo;i<en;i++)A[i][i]-=x;s=abs(A[en][na])+abs(A[na][enm2]);x=0.75*s;y=x;w=-0.4375*s*s}//130
+    its++;itn--;
+    for(mm=l;mm<enm2;mm++){n=enm2+l-mm;zz=A[m][m];r=x-zz;s=y-zz;p=(r*s-w)/A[m+1][m]+A[m][m+1];q=A[m+1][m+1]-zz-r-s;r=A[m+2][m+1];s=abs(p)+abs(q)+abs(r);p=p/s;q=q/s;r=r/s
+     if(m==l)break
+     tst1=abs(p)*(abs(A[m-1][m-1])+abs(zz)+abs(A[m+1][m+1]));tst2=tst1+abs(A[m][m-1])*(abs(q)+abs(r))
+     if(tst2==tst1)break
+    }//150
+    mp2=m+2
+    for(i=mp2;i<en;i++){A[i][i-2]=0;if(i==mp2)break;A[i][i-3]=0}//160
+    //todo..
+   }
+  }//270
+ } //340
+ //todo https://people.sc.fsu.edu/~jburkardt/f_src/eispack/eispack.f90 https://www.netlib.org/cgi-bin/netlibfiles.txt?format=txt&filename=eispack%2Frg.f
+}
