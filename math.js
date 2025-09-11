@@ -1,10 +1,20 @@
-let sin=Math.sin,cos=Math.cos,atan2=Math.atan2,sqrt=Math.sqrt,abs=Math.abs,hypot=Math.hypot,log=Math.log,log10=Math.log10,log2=Math.log2,exp=Math.exp,sign=Math.sign,floor=Math.floor,ceil=Math.ceil,round=Math.round,min=Math.min,max=Math.max;const pi=Math.PI
+let sin=Math.sin,cos=Math.cos,atan2=Math.atan2,sqrt=Math.sqrt,abs=Math.abs,hypot=Math.hypot,log=Math.log,log10=Math.log10,log2=Math.log2,exp=Math.exp,sign=Math.sign,floor=Math.floor,ceil=Math.ceil,round=Math.round,min=Math.min,max=Math.max,random=Math.random;const pi=Math.PI
 let zdiv=(xr,xi,yr,yi)=>{let r=0,d=0,e=0,f=0;if(abs(yr)>=abs(yi)){r=yi/yr;d=yr+r*yi;e=(xr+xi*r)/d;f=(xi-xr*r)/d}else{r=yr/yi;d=yi+r*yr;e=(xr*r+xi)/d;f=(xi*r-xr)/d};return[e,f]}
 let norm=z=>{let s=0,r=0,t;for(let i=0;i<z.length;i++){let x=z[i];if(x){x=abs(x);if(s<x){t=s/x;r=1+r*t*t;s=x}else{t=x/s;r+=t*t}}};return s*sqrt(r)} //s*s*r if no sqrt
 let norm2=z=>{let s=0,r=0,t;for(let i=0;i<z.length;i++){let x=z[i];if(x){x=abs(x);if(s<x){t=s/x;r=1+r*t*t;s=x}else{t=x/s;r+=t*t}}};return s*s*r}
-let eye=n=>new Array(n).fill(0).map((_,i)=>{let r=new Float64Array(n);r[i]=1;return r})
-let eyez=n=>new Array(n).fill(0).map((_,i)=>{let r=new Float64Array(2*n);r[2*i]=1;return r})
+let eye=n=>Array(n).fill(0).map((_,i)=>{let r=new Float64Array(n);r[i]=1;return r})
+let eyez=n=>Array(n).fill(0).map((_,i)=>{let r=new Float64Array(2*n);r[2*i]=1;return r})
+let rand=(m,n)=>n==undefined?new Float64Array(m).map(x=>random()):Array(m).fill([]).map(x=>new Float64Array(n).map(x=>random()))
 let grade=(x, r)=>Array.from(x.keys()).sort((a,b)=>x[a]-x[b])
+let copy=x=>Array.isArray(x)?x.map(copy):x.map(x=>x)
+
+let  dot=(u,v)=>{let n=u.length,r=0;for(let i=0;i<n;i++)r+=u[i]*v[i];return r}
+let zdot=(u,v)=>{let r=new Float64Array(2);for(let i=0;i<u.length;i+=2){r[0]+=u[i]*v[i]+u[1+i]*v[1+i];r[1]+=-u[1+i]*v[i]+u[i]*v[1+i]};return r}
+let  mv= (A,b)=>{let n=A.length;r=new Float64Array(n);A.forEach((a,i)=>r[i]=dot(a,b));return r}
+let zmv= (A,b)=>{let n=A.length;r=new Float64Array(2*n);A.forEach((a,i)=>r.set(zdot(a,b),2*i));return r}
+
+let lu=A=>{let n=A.length;P=Array(n).fill(0).map((_,i)=>i);for(let i=0;i<n;i++){let mx=0,mi=0;for(let k=i;k<n;k++){let a=abs(A[k][i]);if(a>mx){mx=a;mi=k}};if(mi!=i){let t=P[i];P[i]=P[mi];P[mi]=t;t=A[i];A[i]=A[mi];A[mi]=t};let c=1/A[i][i];for(let j=1+i;j<n;j++){A[j][i]*=c;for(let k=1+i;k<n;k++)A[j][k]-=A[j][i]*A[i][k]}};return P}
+let lusolve=(A,P,b)=>{let n=A.length,x=new Float64Array(n);for(let i=0;i<n;i++){let a=b[P[i]];for(let k=0;k<i;k++)a-=A[i][k]*x[k];x[i]=a};for(let i=n-1;i>=0;i--){let a=x[i];for(let k=1+i;k<n;k++)a-=A[i][k]*x[k];x[i]=a/A[i][i]};return x}
 
 let solve=(A,b)=>{let P=lup(A);return lupsolve(A,P,b)} //A:list of complex rows: [Float64Array([r,i,r,i,..]), row2, ..]
 let lup=(A, P)=>{let n=A.length;P=Array(n).fill(0).map((_,i)=>i)
@@ -178,6 +188,8 @@ let zavg3=(x,n)=>{let f=(x,n)=>{let ar=0,ai=0,br=0,bi=0,p=0,s=1/n;for(let i=0;i<
   x[n-2]=br;x[n-1]=bi;return x.subarray(n-2)}
  n=2*floor((9+n)/10);return(!n)?x:n>x.length?x.subarray(0,0):f(f(f(x,5*n),3*n),2*n)}
 
+
+/*
 let rg=A=>{let[ho,hi,sc]=balanc(A),ind=elmhes(A,lo,hi),z=eltran(A,ho,li),w=hqr2(A,lo,hi,z);return[w,z]}
 let balanc=A=>{let i,j,k,m,c,r,g,f,s,n=A.length,l=n,sc=Array(n).fill(0),dn,nc,sw=0
  do=0;while(!dn){
@@ -267,3 +279,4 @@ let hqr2=(A,lo,hi,z)=>{let n=A.length,i,i2,j,k,l,ll,nrm,en,t,itn,its,na,enm2,s,t
  } //340
  //todo https://people.sc.fsu.edu/~jburkardt/f_src/eispack/eispack.f90 https://www.netlib.org/cgi-bin/netlibfiles.txt?format=txt&filename=eispack%2Frg.f
 }
+*/
