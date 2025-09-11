@@ -13,33 +13,28 @@ let zdot=(u,v)=>{let r=new Float64Array(2);for(let i=0;i<u.length;i+=2){r[0]+=u[
 let  mv= (A,b)=>{let n=A.length;r=new Float64Array(n);A.forEach((a,i)=>r[i]=dot(a,b));return r}
 let zmv= (A,b)=>{let n=A.length;r=new Float64Array(2*n);A.forEach((a,i)=>r.set(zdot(a,b),2*i));return r}
 
-let lu=A=>{let n=A.length;P=Array(n).fill(0).map((_,i)=>i);for(let i=0;i<n;i++){let mx=0,mi=0;for(let k=i;k<n;k++){let a=abs(A[k][i]);if(a>mx){mx=a;mi=k}};if(mi!=i){let t=P[i];P[i]=P[mi];P[mi]=t;t=A[i];A[i]=A[mi];A[mi]=t};let c=1/A[i][i];for(let j=1+i;j<n;j++){A[j][i]*=c;for(let k=1+i;k<n;k++)A[j][k]-=A[j][i]*A[i][k]}};return P}
-let lusolve=(A,P,b)=>{let n=A.length,x=new Float64Array(n);for(let i=0;i<n;i++){let a=b[P[i]];for(let k=0;k<i;k++)a-=A[i][k]*x[k];x[i]=a};for(let i=n-1;i>=0;i--){let a=x[i];for(let k=1+i;k<n;k++)a-=A[i][k]*x[k];x[i]=a/A[i][i]};return x}
+let lu=A=>{A=copy(A);let n=A.length;P=Array(n).fill(0).map((_,i)=>i);for(let i=0;i<n;i++){let mx=0,mi=0;for(let k=i;k<n;k++){let a=abs(A[k][i]);if(a>mx){mx=a;mi=k}};if(mi!=i){let t=P[i];P[i]=P[mi];P[mi]=t;t=A[i];A[i]=A[mi];A[mi]=t};let c=1/A[i][i];for(let j=1+i;j<n;j++){A[j][i]*=c;for(let k=1+i;k<n;k++)A[j][k]-=A[j][i]*A[i][k]}};return[A,P]}
+let lusolve=(AP,b)=>{let[A,P]=AP,n=A.length,x=new Float64Array(n);for(let i=0;i<n;i++){let a=b[P[i]];for(let k=0;k<i;k++)a-=A[i][k]*x[k];x[i]=a};for(let i=n-1;i>=0;i--){let a=x[i];for(let k=1+i;k<n;k++)a-=A[i][k]*x[k];x[i]=a/A[i][i]};return x}
 
-let solve=(A,b)=>{let P=lup(A);return lupsolve(A,P,b)} //A:list of complex rows: [Float64Array([r,i,r,i,..]), row2, ..]
-let lup=(A, P)=>{let n=A.length;P=Array(n).fill(0).map((_,i)=>i)
- for(let i=0;i<n;i++){
-  let mx=0,mi=0;for(let k=i;k<n;k++){let a=A[k][2*i]*A[k][2*i]+A[k][2*i+1]*A[k][2*i+1];if(a>mx){mx=a;mi=k}}
+let luz=A=>{A=copy(A);let n=A.length,P=Array(n).fill(0).map((_,i)=>i)
+ for(let i=0;i<n;i++){let mx=0,mi=0;for(let k=i;k<n;k++){let a=A[k][2*i]*A[k][2*i]+A[k][2*i+1]*A[k][2*i+1];if(a>mx){mx=a;mi=k}}
   if(mi!=i){let t=P[i];P[i]=P[mi];P[mi]=t;t=A[i];A[i]=A[mi];A[mi]=t}
   let a=A[i][2*i],b=A[i][2*i+1],c=1/(a+b*b/a),d=-1/(b+a*a/b)
   for(let j=1+i;j<n;j++){a=A[j][2*i];b=A[j][2*i+1];A[j][2*i]=a*c-b*d;A[j][2*i+1]=a*d+b*c;a=A[j][2*i];b=A[j][2*i+1]
-   for(let k=2+2*i;k<2*n;k+=2){let e=A[i][k],f=A[i][1+k];A[j][k]-=a*e-b*f;A[j][1+k]-=a*f+b*e}}}
- return P} 
-let lupsolve=(A,P,b)=>{let n=A.length,x=new Float64Array(2*n)
+   for(let k=2+2*i;k<2*n;k+=2){let e=A[i][k],f=A[i][1+k];A[j][k]-=a*e-b*f;A[j][1+k]-=a*f+b*e}}};return[A,P]} 
+let luzsolve=(AP,b)=>{let[A,P]=AP,n=A.length,x=new Float64Array(2*n)
  for(let i=0;i<n;i++){let xr=b[2*P[i]],xi=b[1+2*P[i]]
-  for(let k=0;k<2*i;k+=2){let a=A[i][k],b=A[i][1+k],c=x[k],d=x[1+k];xr-=a*c-b*d;xi-=a*d+b*c}
-  x[2*i]=xr;x[2*i+1]=xi}
+  for(let k=0;k<2*i;k+=2){let a=A[i][k],b=A[i][1+k],c=x[k],d=x[1+k];xr-=a*c-b*d;xi-=a*d+b*c};x[2*i]=xr;x[2*i+1]=xi}
  for(let i=n-1;i>=0;i--){let xr=x[2*i],xi=x[2*i+1]
   for(let k=2+2*i;k<2*n;k+=2){let a=A[i][k],b=A[i][1+k],c=x[k],d=x[1+k];xr-=a*c-b*d;xi-=a*d+b*c}
-  let a=A[i][2*i],b=A[i][2*i+1],c=1/(a+b*b/a),d=-1/(b+a*a/b);x[2*i]=xr*c-xi*d;x[2*i+1]=xr*d+xi*c
- };return x}
+  let a=A[i][2*i],b=A[i][2*i+1],c=1/(a+b*b/a),d=-1/(b+a*a/b);x[2*i]=xr*c-xi*d;x[2*i+1]=xr*d+xi*c};return x}
 
-let lub=A=>{let m=A.length,n2=A[0].length,h=(m-1)/2
+let luzb=A=>{A=copy(A);let m=A.length,n2=A[0].length,h=(m-1)/2
  for(let j=0;j<n2;j+=2){let a=A[h][j],b=A[h][1+j]
   for(let k=1+h;k<m;k++){let[p,q]=zdiv(A[k][j],A[k][1+j],a,b);
    for(let i=1;i<m;i++){let i2=2*i;if(h-i>=0&&j+i2<n2){let c=A[h-i][j+i2],d=A[h-i][j+i2+1];A[k-i][j+i2]-=p*c-q*d;A[k-i][1+j+i2]-=p*d+q*c}}
    A[k][j]=p;A[k][j+1]=q}};return A}
-let lubsolve=(A,b)=>{let m=A.length,n=A[0].length/2,h=(m-1)/2,x=b.map(x=>x)
+let luzbsolve=(A,b)=>{let m=A.length,n=A[0].length/2,h=(m-1)/2,x=b.map(x=>x)
  for(let i=0;i<n;i++){let i2=2*i,i3=1+i2
   for(let k=i-h;k<i;k++){let j=i-k+h,k2=2*k,k3=1+k2
    if(j>=0&&j<m&&k>=0){let a=A[j];x[i2]-=a[k2]*x[k2]-a[k3]*x[k3];x[i3]-=a[k3]*x[k2]+a[k2]*x[k3]}}}
@@ -48,13 +43,13 @@ let lubsolve=(A,b)=>{let m=A.length,n=A[0].length/2,h=(m-1)/2,x=b.map(x=>x)
    if(h+k<m&&i+k<n){let a=A[h-k];x[i2]-=a[k2]*x[k2]-a[k3]*x[k3];x[i3]-=a[k2]*x[k3]+a[k3]*x[k2]}}
   let[p,q]=zdiv(x[i2],x[i3],A[h][i2],A[h][i3]);x[i2]=p;x[i3]=q};return x}
 
-let chol=A=>{let n=A.length,i,j,k,s;for(i=0;i<n;i++){for(j=0;j<=i;j++){s=A[i][j];for(k=0;k<j;k++)s-=A[i][k]*A[j][k];A[i][j]=(i>j)?s/A[j][j]:sqrt(s)}};return A}
-let chob=A=>{let m=A.length,n=A[0].length,h=(m-1)/2,i,j,k,s;for(i=0;i<n;i++){for(j=max(0,i-h);j<=i;j++){s=A[h+i-j][j];for(k=max(0,i-h);k<j;k++)s-=A[h+i-k][k]*A[h+j-k][k];A[h+i-j][j]=i>j?s/A[h][j]:sqrt(s)}};return A}
-let cholsolve=(L,b)=>{let n=L.length,i,j;for(i=0;i<n;i++){for(j=0;j<i;j++)b[i]-=L[i][j]*b[j];b[i]/=L[i][i]};for(i=n-1;i>=0;i--){for(j=1+i;j<n;j++)b[i]-=L[j][i]*b[j];b[i]/=L[i][i]};return b;}
-let chobsolve=(L,b)=>{let m=L.length,n=L[0].length,h=(m-1)/2,i,j;for(i=0;i<n;i++){for(j=max(0,i-h);j<i;j++)b[i]-=L[h+i-j][j]*b[j];b[i]/=L[h][i]};for(i=n-1;i>=0;i--){for(j=1+i;j<min(i+h+1,n);j++)b[i]-=L[h+j-i][i]*b[j];b[i]/=L[h][i]};return b;}
+let chol=A=>{A=copy(A);let n=A.length,i,j,k,s;for(i=0;i<n;i++){for(j=0;j<=i;j++){s=A[i][j];for(k=0;k<j;k++)s-=A[i][k]*A[j][k];A[i][j]=(i>j)?s/A[j][j]:sqrt(s)}};return A}
+let chob=A=>{A=copy(A);let m=A.length,n=A[0].length,h=(m-1)/2,i,j,k,s;for(i=0;i<n;i++){for(j=max(0,i-h);j<=i;j++){s=A[h+i-j][j];for(k=max(0,i-h);k<j;k++)s-=A[h+i-k][k]*A[h+j-k][k];A[h+i-j][j]=i>j?s/A[h][j]:sqrt(s)}};return A}
+let cholsolve=(L,b)=>{b=copy(b);let n=L.length,i,j;for(i=0;i<n;i++){for(j=0;j<i;j++)b[i]-=L[i][j]*b[j];b[i]/=L[i][i]};for(i=n-1;i>=0;i--){for(j=1+i;j<n;j++)b[i]-=L[j][i]*b[j];b[i]/=L[i][i]};return b;}
+let chobsolve=(L,b)=>{b=copy(b);let m=L.length,n=L[0].length,h=(m-1)/2,i,j;for(i=0;i<n;i++){for(j=max(0,i-h);j<i;j++)b[i]-=L[h+i-j][j]*b[j];b[i]/=L[h][i]};for(i=n-1;i>=0;i--){for(j=1+i;j<min(i+h+1,n);j++)b[i]-=L[h+j-i][i]*b[j];b[i]/=L[h][i]};return b;}
 
-let eig=A=>tqli(A,...tred2(A)) //real sym
-let gei=(A,B)=>{let L=chob(B),V=reducb(A,L),x=eig(V);return[x,ltsolve2(L,V)]}  //general evp A,B>0 both real sym
+let eigs=A=>(A=copy(A),tqli(A,...tred2(A))) //real sym
+let gevp=(A,B)=>{A=copy(A);let L=chob(B),V=reducb(A,L),x=eig(V);return[x,ltsolve2(L,V)]}  //general evp A,B>0 both real sym
 let tred2=A=>{let l,k,j,i,s,hh,h,g,f,n=A.length,d=new Float64Array(n),e=new Float64Array(n)
  for(i=n-1;i>0;i--){l=i-1;h=s=0;if(l>0){for(k=0;k<1+l;k++)s+=abs(A[i][k]);if(!s)e[i]=A[i][l];else{for(k=0;k<1+l;k++){A[i][k]/=s;h+=A[i][k]*A[i][k]}
     f=A[i][l];g=f>0?-sqrt(h):sqrt(h);e[i]=s*g;h-=f*g;A[i][l]=f-g;f=0;for(j=0;j<1+l;j++){A[j][i]=A[i][j]/h;g=0;for(k=0;k<1+j;k++)g+=A[j][k]*A[i][k];for(k=1+j;k<1+l;k++)g+=A[k][j]*A[i][k];e[j]=g/h;f+=e[j]*A[i][j]}
@@ -77,73 +72,8 @@ let reducb=(A,L)=>{let i,j,k,x,y,m=A.length,n=A[0].length,h=(m-1)/2,C=Array(n).f
  for(j=0;j<n;j++){for(i=j;i<n;i++){x=C[i][j];if(i>j)for(k=max(j,i-h);k<i;k++)x-=C[k][j]*L[h+i-k][k];for(k=max(0,i-h);k<j;k++)x-=C[j][k]*L[h+i-k][k];C[i][j]=x/L[h][i]}};return C}
 let ltsolve2=(L,X)=>{let i,j,k,m=L.length,h=(m-1)/2,n=X.length;for(k=0;k<n;k++){for(i=n-1;i>=0;i--){for(j=1+i;j<min(i+h+1,n);j++)X[i][k]-=L[h+j-i][i]*X[j][k];X[i][k]/=L[h][i]}};return X} //L'\X multi rhs, todo flip X
 
-
-
-/*
-let B=[[2.8696,  1.9644,  1.8804,       0,       0,       0],
-       [1.9644,  1.8855,  1.5371,  0.6240,       0,       0],
-       [1.8804,  1.5371,  1.8169,  0.4867,  0.5381,       0],
-       [     0,  0.6240,  0.4867,  1.0908,  0.0995, -0.0741],
-       [     0,       0,  0.5381,  0.0995,  0.8794,  0.3238],
-       [     0,       0,       0, -0.0741,  0.3238,  0.6199]];
-
-
-let A=[[1.9236,  1.3682,  1.7185,       0,       0,       0],
-       [1.3682,  1.5970,  1.7623,  0.8792,       0,       0],
-       [1.7185,  1.7623,  2.1690,  1.0988,  1.8970,       0],
-       [     0,  0.8792,  1.0988,  0.8065,  0.9876,  1.0567],
-       [     0,       0,  1.8970,  0.9876,  2.4705,  2.0915],
-       [     0,       0,       0,  1.0567,  2.0915,  2.6707]];
-
-let L=chol(B);
-console.log("L",L.map(x=>x.map(x=>x.toFixed(3)).join(" ")))
-
-let C=reduc(A,L)
-console.log("C",C.map(x=>x.map(x=>x.toFixed(3)).join(" ")))
-
-
-let B=[[     0,       0,  1.8804,  0.6240,  0.5381, -0.0741],
-       [     0,  1.9644,  1.5371,  0.4867,  0.0995,  0.3238],
-       [2.8696,  1.8855,  1.8169,  1.0908,  0.8794,  0.6199],
-       [1.9644,  1.5371,  0.4867,  0.0995,  0.3238,       0],
-       [1.8804,  0.6240,  0.5381, -0.0741,       0,       0]];
-
-
-let A=[[     0,       0,  1.7185,  0.8792,  1.8970,  1.0567],
-       [     0,  1.3682,  1.7623,  1.0988,  0.9876,  2.0915],
-       [1.9236,  1.5970,  2.1690,  0.8065,  2.4705,  2.6707],
-       [1.3682,  1.7623,  1.0988,  0.9876,  2.0915,       0],
-       [1.7185,  0.8792,  1.8970,  1.0567,       0,       0]];
-
-
-let L=chob(B);
-console.log("L",L.map(x=>x.map(x=>x.toFixed(3)).join(" ")))
-
-let C=reducb(A,L)
-console.log("C",C.map(x=>x.map(x=>x.toFixed(3)).join(" ")))
-
-console.log("B",B.map(x=>x.map(x=>x.toFixed(3)).join(" ")))
-console.log("A",A.map(x=>x.map(x=>x.toFixed(3)).join(" ")))
-
-let[e,V]=gei(A,B);
-console.log("e", e);
-console.log("V",V.map(x=>x.map(x=>x.toFixed(3)).join(" ")))
-
-let A=[[10,1,2,3,4],
-       [1,9,-1,2,-3],
-       [2,-1,7,3,-5],
-       [3,2,3,12,-1],
-       [4,-3,-5,-1,15]];
-let[d,e]=tred2(A)
-console.log("A",A.map(x=>x.map(x=>x.toFixed(3)).join(" ")))
-console.log("d",d)
-console.log("e",e)
-console.log("eigs:", tqli(A,d,e));
-console.log("V",A.map(x=>x.map(x=>x.toFixed(3)).join(" ")))
-*/
- 
-let lsq=(A,b)=>qrsolve(qr(A),b)  //A:list of complex columns: [Float64Array([r,i,r,i,..]), col2, ..]
-let qr=A=>{const n=A.length,m2=A[0].length
+let lsqz=(A,b)=>qrzsolve(qrz(A),b)
+let qrz=A=>{A=copy(A);const n=A.length,m2=A[0].length
  let d=new Float64Array(2*n)
  for(let j=0;j<n;j++){let j2=2*j,j3=1+j2,Aj=A[j]
   let s=norm(Aj.subarray(j2)),h=s/hypot(Aj[j2],Aj[j3]);d[j2]=-h*Aj[j2];d[j3]=-h*Aj[j3];let f=sqrt(s*(s+hypot(Aj[j2],Aj[j3])));Aj[j2]-=d[j2];Aj[j3]-=d[j3]
@@ -152,7 +82,7 @@ let qr=A=>{const n=A.length,m2=A[0].length
    for(let k2=j2;k2<m2;k2+=2){const k3=1+k2;a+=Aj[k2]*Ai[k2]+Aj[k3]*Ai[k3];b+=Aj[k2]*Ai[k3]-Aj[k3]*Ai[k2]}
    for(let k2=j2;k2<m2;k2+=2){const k3=1+k2;Ai[k2]-=Aj[k2]*a-Aj[k3]*b;Ai[k3]-=Aj[k2]*b+Aj[k3]*a}}}
  return[A,d]}
-let qrsolve=(Q,x)=>{let[A,d]=Q,m2=A[0].length
+let qrzsolve=(Ad,x)=>{let[A,d]=Ad,m2=A[0].length
  for(let j=0;j<A.length;j++){let Aj=A[j],a=0,b=0
   for(let k2=2*j;k2<m2;k2+=2){const k3=1+k2;a+=Aj[k2]*x[k2]+Aj[k3]*x[k3];b+=Aj[k2]*x[k3]-Aj[k3]*x[k2]}
   for(let k2=2*j;k2<m2;k2+=2){const k3=1+k2;x[k2]-=Aj[k2]*a-Aj[k3]*b;x[k3]-=Aj[k2]*b+Aj[k3]*a}}
@@ -161,7 +91,7 @@ let qrsolve=(Q,x)=>{let[A,d]=Q,m2=A[0].length
   let[a,b]=zdiv(x[i2],x[i3],d[i2],d[i3]);x[i2]=a;x[i3]=b}
  return x.subarray(0,2*A.length)}
 
-let svd=A=>{ //A:list of complex columns (see qr)
+let svd=A=>{
  let svq=A=>{let[h,d]=qr(A),n=A.length,m2=A[0].length,r=Array(A.length).fill([]).map(x=>new Float64Array(2*A.length).fill(0));for(let i=1;i<h.length;i++){let ri=r[i],hi=h[i];for(let k=0;k<2*i;k+=2){ri[k]=hi[k];ri[1+k]=hi[1+k]}};for(let i=0;i<h.length;i++){r[i][2*i]=d[2*i];r[i][1+2*i]=d[1+2*i]};
   let Q=x=>{let y=new Float64Array(m2);y.set(x);for(let i=0;i<n;i++){let j=n-1-i,hj=h[j],a=0,b=0;for(let k2=m2-2-2*i;k2<m2;k2+=2){const k3=1+k2;a+=hj[k2]*y[k2]+hj[k3]*y[k3];b+=hj[k2]*y[k3]-hj[k3]*y[k2]};for(let k2=m2-2-2*i;k2<m2;k2+=2){const k3=1+k2;y[k2]-=a*hj[k2]-b*hj[k3];y[k3]-=a*hj[k3]+b*hj[k2]}};return y}
   let[u,s,v]=svd(r);return[u.map(Q),s,v]}
@@ -188,6 +118,11 @@ let zavg3=(x,n)=>{let f=(x,n)=>{let ar=0,ai=0,br=0,bi=0,p=0,s=1/n;for(let i=0;i<
   x[n-2]=br;x[n-1]=bi;return x.subarray(n-2)}
  n=2*floor((9+n)/10);return(!n)?x:n>x.length?x.subarray(0,0):f(f(f(x,5*n),3*n),2*n)}
 
+let form=A=>(A.constructor==Float64Array?Array.from(A.slice(0,min(A.length,100))).map(String).join("\n")+(A.length>100?"\n.."+A.length:""):
+ Array.isArray(A)?
+ A.slice(0,min(100,A.length)).map(x=>Array.from(x.slice(0,min(20,x.length))).map(x=>(abs(x)<1e-3||abs(x)>=10000)?x.toExponential(4):x.toFixed(4)).join(" ")).join("\n")+(A.length>100?"\n.."+A.length:"")
+ :String(x)
+)
 
 /*
 let rg=A=>{let[ho,hi,sc]=balanc(A),ind=elmhes(A,lo,hi),z=eltran(A,ho,li),w=hqr2(A,lo,hi,z);return[w,z]}
