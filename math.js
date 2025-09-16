@@ -121,6 +121,14 @@ console.log("thd",t2[i-1],hh,d[i],H[i][i3])
    
    }};return[d,e,e2,[t1,t2]]}
 
+
+let htribk=(H,t,m,z)=>{let n=H.length,t1=t[0],t2=t[1],i,j,k;if(!m)return
+ for(k=0;i<n;k++){for(j=0;j<m;j++){let j2=2*j,j3=1+j2;z[k][j3]=-z[k][j2]*t2[k];z[k][j2]*=t1[k]}}
+ for(i=1;i<n;i++){let i2=2*i,i3=1+i2,Hi=H[i],h=Hi[i2]
+  if(h){for(j=0;j<m;j++){let j2=2*j,j3=1+j2,s=0,si=0
+    for(k=0;k<i-1;k++){s+=Hi[k2]*z[k][j2]-Hi[k3]*z[k][j3];si+=Hi[k2]*z[k][j3]+Hi[k3]*z[k][j2]}
+    s=(s/h)/h;si=(si/h)/h;for(k=0;k<i;k++){let k2=2*k,k3=1+k2;z[k][j2]+=-s*Hi[k2]-si*Hi[k3];z[k][j3]+=-si*Hi[k2]-s*Hi[k3]}}}}}
+
 let H=[
  [1,0,  3,-1,  4,0],
  [3,1, -2, 0, -6,1],
