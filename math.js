@@ -72,6 +72,66 @@ let reducb=(A,L)=>{let i,j,k,x,y,m=A.length,n=A[0].length,h=(m-1)/2,C=Array(n).f
  for(j=0;j<n;j++){for(i=j;i<n;i++){x=C[i][j];if(i>j)for(k=max(j,i-h);k<i;k++)x-=C[k][j]*L[h+i-k][k];for(k=max(0,i-h);k<j;k++)x-=C[j][k]*L[h+i-k][k];C[i][j]=x/L[h][i]}};return C}
 let ltsolve2=(L,X)=>{let i,j,k,m=L.length,h=(m-1)/2,n=X.length;for(k=0;k<n;k++){for(i=n-1;i>=0;i--){for(j=1+i;j<min(i+h+1,n);j++)X[i][k]-=L[h+j-i][i]*X[j][k];X[i][k]/=L[h][i]}};return X} //L'\X multi rhs, todo flip X
 
+//tridiagonalize complex hermitian matrix H  https://people.sc.fsu.edu/~jburkardt/f_src/eispack/eispack.f90
+let htridi=H=>{let n=H.length,d=new Float64Array(n),e=new Float64Array(n),e2=new Float64Array(n),tau=[new Float64Array(n),new Float64Array(n)]
+ let i,j,k,f,fi,g,gi,h,hh,sc,si //h+=
+ tau[0][n-1]=1;for(i=0;i<n;i++)d[i]=H[i][2*i]
+ for(i=n-1;i>=0;i--){console.log("I",1+i);let i_=2*(i-1),i2=2*i,i3=1+i2; h=0;sc=0;
+  if(!i){e[i]=0;e2[i]=0;hh=d[i];d[i]=H[i][i2];H[i][i2]=hh;H[i][i3]=sc*sqrt(h)}
+  else{
+   console.log("sc?",sc)
+   for(k=0;k<i2;k++){console.log("Hik",H[i][k]);sc+=abs(H[i][k])}
+   console.log("sc!",sc)
+   if(!sc){tau[0][i-1]=1;tau[1][i-1]=0;e[i]=0;e2[i]=0;hh=d[i];d[i]=H[i][i2];H[i][i2]=hh;H[i][i3]=sc*sqrt(h);console.log("thd.",tau[1][i-1],hh,d[i],H[i][i3]);continue}
+   for(k=0;k<i2;k++)H[i][k]/=sc
+   for(k=0;k<i2;k+=2)h+=H[i][k]*H[i][k]+H[i][1+k]*H[i][1+k];
+   e2[i]=sc*sc*h;g=sqrt(h);e[i]=sc*g;f=hypot(H[i][i_],H[i][1+i_]);
+   if(f){
+    tau[0][i-1]=( H[i][1+i_]*tau[1][i]-H[i][  i_]*tau[0][i] )/f
+    si         =( H[i][i_  ]*tau[1][i]+H[i][1+i_]*tau[0][i] )/f
+    h+=f*g;g=1+g/f;H[i][i_]*=g;H[i][1+i_]*=g 
+    if(i==1){
+     for(k=0;k<i2;k++)H[i][k]*=sc
+     tau[1][i-1]=-si;hh=d[i];d[i]=H[i][i2];H[i][i2]=hh;H[i][i3]=sc*sqrt(h)
+     console.log("thd:",tau[1][i-1],hh,d[i],H[i][i3],sc,h)
+     console.log("continue2")
+     continue
+    }
+   }else{tau[0][i-1]-tau[0][i];si=tau[1][i];H[i][i_]=g} 
+   f=0;
+   for(j=0;j<i;j++){let j2=2*j,j3=1+j2; g=0;gi=0;
+    for(k=0;k<=j;k++){let k2=2*k,k3=1+k2;g+=H[j][k2]*H[i][k2]+H[j][k3]*H[i][k3];gi+=-H[j][k2]*H[i][k3]+H[j][k3]*H[i][k2]}
+    for(k=1+j;k<i;k++){let k2=2*k,k3=1+k2;g+=H[k][j2]*H[i][k2]-H[k][j3]*H[i][k3];gi+=-H[k][j2]*H[i][k3]-H[k][j3]*H[i][k2]}
+    e[j]=g/h;tau[1][j]=gi/h;f+=e[j]*H[i][j2]-tau[1][j]*H[i][j3]
+console.log("j",1+j,e[j],tau[1][j],f)    
+    }
+   hh=f/(h+h)
+   for(j=0;j<i;j++){let j2=2*j,j3=1+j2  
+    f=H[i][j2];g=e[j]-hh*f;e[j]=g;fi=-H[i][j3];gi=tau[1][j]-hh*fi;tau[1][j]=-gi
+    for(k=0;k<=j;k++){ let k2=2*k,k3=1+k2
+     H[j][k2]+= -f*e[k]-g*H[i][k2] + fi*tau[1][k] + gi*H[i][k3]
+     H[j][k3]+- -f*tau[1][k]-g*H[i][k3]-fi*e[k]-gi*H[i][k3]
+    }}
+console.log("sc",sc, si)
+   for(k=0;k<i2;k++)H[i][k]*=sc;
+   tau[1][i-1]=-si;hh=d[i];d[i]=H[i][i2];H[i][i2]=hh;H[i][i3]=sc*sqrt(h)
+console.log("thd",tau[1][i-1],hh,d[i],H[i][i3])   
+   
+   }};return[d,e,e2,tau]}
+
+let H=[
+ [1,0,  3,-1,  4,0],
+ [3,1, -2, 0, -6,1],
+ [4,0, -6,-1,  5,0],
+]
+let[d,e,e2,tau]=htridi(H);
+console.log("H",H)
+console.log("d", Array.from(d))
+console.log("e", Array.from(e))
+console.log("e2",Array.from(e2))
+console.log("t1",Array.from(tau[0]))
+console.log("t2",Array.from(tau[1]))
+
 let lsqz=(A,b)=>qrzsolve(qrz(A),b)
 let qrz=A=>{A=copy(A);const n=A.length,m2=A[0].length
  let d=new Float64Array(2*n)
