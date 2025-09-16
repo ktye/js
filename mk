@@ -25,7 +25,7 @@ cat << EOF
 let cols=()=>Math.floor(document.body.getBoundingClientRect().width/cw),
 _jdo=s=>{s=_i.innerText.trim();
  if(s){
-  _o.textContent=String(eval(s));
+  _o.textContent=form(eval(s));
 }}
 
 window.init=()=>{_jdo()
@@ -48,7 +48,7 @@ window.onunhandledrejection=e=>{_o.textContent+="\n"+e.reason+"\n";console.log(e
 <pre id="_o">
 EOF
 
-cat math.js bench.js | sed 1d | sed -n 's/^let \([a-z][a-z0-9]*\)=.*/\1/p' | tr '\n' ' '
+cat math.js bench.js | sed 1d | sed -n 's/^let \([a-z][a-z0-9]*\)=.*/\1/p' | tr '\n' ' ' | fmt
 
 cat << EOF
 </pre></pre>

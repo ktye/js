@@ -73,51 +73,53 @@ let reducb=(A,L)=>{let i,j,k,x,y,m=A.length,n=A[0].length,h=(m-1)/2,C=Array(n).f
 let ltsolve2=(L,X)=>{let i,j,k,m=L.length,h=(m-1)/2,n=X.length;for(k=0;k<n;k++){for(i=n-1;i>=0;i--){for(j=1+i;j<min(i+h+1,n);j++)X[i][k]-=L[h+j-i][i]*X[j][k];X[i][k]/=L[h][i]}};return X} //L'\X multi rhs, todo flip X
 
 //tridiagonalize complex hermitian matrix H  https://people.sc.fsu.edu/~jburkardt/f_src/eispack/eispack.f90
-let htridi=H=>{let n=H.length,d=new Float64Array(n),e=new Float64Array(n),e2=new Float64Array(n),tau=[new Float64Array(n),new Float64Array(n)]
+let htridi=H=>{let n=H.length,d=new Float64Array(n),e=d.slice(),e2=d.slice(),
+t1=d.slice(),t2=d.slice()
  let i,j,k,f,fi,g,gi,h,hh,sc,si //h+=
- tau[0][n-1]=1;for(i=0;i<n;i++)d[i]=H[i][2*i]
- for(i=n-1;i>=0;i--){console.log("I",1+i);let i_=2*(i-1),i2=2*i,i3=1+i2; h=0;sc=0;
-  if(!i){e[i]=0;e2[i]=0;hh=d[i];d[i]=H[i][i2];H[i][i2]=hh;H[i][i3]=sc*sqrt(h)}
+ t1[n-1]=1;for(i=0;i<n;i++)d[i]=H[i][2*i]
+ for(i=n-1;i>=0;i--){console.log("I",1+i);let i_=2*(i-1),i2=2*i,i3=1+i2,Hi=H[i]; h=0;sc=0;
+  if(!i){e[i]=0;e2[i]=0;hh=d[i];d[i]=Hi[i2];Hi[i2]=hh;Hi[i3]=sc*sqrt(h)}
   else{
    console.log("sc?",sc)
-   for(k=0;k<i2;k++){console.log("Hik",H[i][k]);sc+=abs(H[i][k])}
+   for(k=0;k<i2;k++){console.log("Hik",H[i][k]);sc+=abs(Hi[k])}
    console.log("sc!",sc)
-   if(!sc){tau[0][i-1]=1;tau[1][i-1]=0;e[i]=0;e2[i]=0;hh=d[i];d[i]=H[i][i2];H[i][i2]=hh;H[i][i3]=sc*sqrt(h);console.log("thd.",tau[1][i-1],hh,d[i],H[i][i3]);continue}
-   for(k=0;k<i2;k++)H[i][k]/=sc
-   for(k=0;k<i2;k+=2)h+=H[i][k]*H[i][k]+H[i][1+k]*H[i][1+k];
-   e2[i]=sc*sc*h;g=sqrt(h);e[i]=sc*g;f=hypot(H[i][i_],H[i][1+i_]);
+   if(!sc){t1[i-1]=1;t2[i-1]=0;e[i]=0;e2[i]=0;hh=d[i];d[i]=Hi[i2];Hi[i2]=hh;
+   Hi[i3]=sc*sqrt(h);console.log("thd.",t2[i-1],hh,d[i],H[i][i3]);continue}
+   for(k=0;k<i2;k++)Hi[k]/=sc
+   for(k=0;k<i2;k+=2)h+=Hi[k]*Hi[k]+Hi[1+k]*Hi[1+k];
+   e2[i]=sc*sc*h;g=sqrt(h);e[i]=sc*g;f=hypot(Hi[i_],Hi[1+i_]);
    if(f){
-    tau[0][i-1]=( H[i][1+i_]*tau[1][i]-H[i][  i_]*tau[0][i] )/f
-    si         =( H[i][i_  ]*tau[1][i]+H[i][1+i_]*tau[0][i] )/f
-    h+=f*g;g=1+g/f;H[i][i_]*=g;H[i][1+i_]*=g 
+    t1[i-1]=(Hi[1+i_]*t2[i]-Hi[  i_]*t1[i])/f
+    si     =(Hi[i_  ]*t2[i]+Hi[1+i_]*t1[i])/f
+    h+=f*g;g=1+g/f;Hi[i_]*=g;Hi[1+i_]*=g 
     if(i==1){
-     for(k=0;k<i2;k++)H[i][k]*=sc
-     tau[1][i-1]=-si;hh=d[i];d[i]=H[i][i2];H[i][i2]=hh;H[i][i3]=sc*sqrt(h)
-     console.log("thd:",tau[1][i-1],hh,d[i],H[i][i3],sc,h)
+     for(k=0;k<i2;k++)Hi[k]*=sc
+     t2[i-1]=-si;hh=d[i];d[i]=Hi[i2];Hi[i2]=hh;Hi[i3]=sc*sqrt(h)
+     console.log("thd:",t2[i-1],hh,d[i],H[i][i3],sc,h)
      console.log("continue2")
      continue
     }
-   }else{tau[0][i-1]-tau[0][i];si=tau[1][i];H[i][i_]=g} 
+   }else{t1[i-1]-t1[i];si=t2[i];Hi[i_]=g} 
    f=0;
    for(j=0;j<i;j++){let j2=2*j,j3=1+j2; g=0;gi=0;
-    for(k=0;k<=j;k++){let k2=2*k,k3=1+k2;g+=H[j][k2]*H[i][k2]+H[j][k3]*H[i][k3];gi+=-H[j][k2]*H[i][k3]+H[j][k3]*H[i][k2]}
-    for(k=1+j;k<i;k++){let k2=2*k,k3=1+k2;g+=H[k][j2]*H[i][k2]-H[k][j3]*H[i][k3];gi+=-H[k][j2]*H[i][k3]-H[k][j3]*H[i][k2]}
-    e[j]=g/h;tau[1][j]=gi/h;f+=e[j]*H[i][j2]-tau[1][j]*H[i][j3]
-console.log("j",1+j,e[j],tau[1][j],f)    
+    for(k=0;k<=j;k++){let k2=2*k,k3=1+k2;g+=H[j][k2]*Hi[k2]+H[j][k3]*Hi[k3];gi+=-H[j][k2]*Hi[k3]+H[j][k3]*Hi[k2]}
+    for(k=1+j;k<i;k++){let k2=2*k,k3=1+k2;g+=H[k][j2]*Hi[k2]-H[k][j3]*Hi[k3];gi+=-H[k][j2]*Hi[k3]-H[k][j3]*Hi[k2]}
+    e[j]=g/h;t2[j]=gi/h;f+=e[j]*Hi[j2]-t2[j]*Hi[j3]
+console.log("j",1+j,e[j],t2[j],f)    
     }
    hh=f/(h+h)
    for(j=0;j<i;j++){let j2=2*j,j3=1+j2  
-    f=H[i][j2];g=e[j]-hh*f;e[j]=g;fi=-H[i][j3];gi=tau[1][j]-hh*fi;tau[1][j]=-gi
+    f=Hi[j2];g=e[j]-hh*f;e[j]=g;fi=-Hi[j3];gi=t2[j]-hh*fi;t2[j]=-gi
     for(k=0;k<=j;k++){ let k2=2*k,k3=1+k2
-     H[j][k2]+= -f*e[k]-g*H[i][k2] + fi*tau[1][k] + gi*H[i][k3]
-     H[j][k3]+- -f*tau[1][k]-g*H[i][k3]-fi*e[k]-gi*H[i][k3]
+     H[j][k2]+=-f* e[k]-g*Hi[k2]+fi*t2[k]+gi*Hi[k3]
+     H[j][k3]+--f*t2[k]-g*Hi[k3]-fi* e[k]-gi*Hi[k2]
     }}
 console.log("sc",sc, si)
-   for(k=0;k<i2;k++)H[i][k]*=sc;
-   tau[1][i-1]=-si;hh=d[i];d[i]=H[i][i2];H[i][i2]=hh;H[i][i3]=sc*sqrt(h)
-console.log("thd",tau[1][i-1],hh,d[i],H[i][i3])   
+   for(k=0;k<i2;k++)Hi[k]*=sc;
+   t2[i-1]=-si;hh=d[i];d[i]=Hi[i2];Hi[i2]=hh;Hi[i3]=sc*sqrt(h)
+console.log("thd",t2[i-1],hh,d[i],H[i][i3])   
    
-   }};return[d,e,e2,tau]}
+   }};return[d,e,e2,[t1,t2]]}
 
 let H=[
  [1,0,  3,-1,  4,0],
