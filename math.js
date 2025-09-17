@@ -96,6 +96,131 @@ let htribk=(H,t,z)=>{let n=H.length,t1=t[0],t2=t[1],i,j,k;
  for(i=1;i<n;i++){let i2=2*i,i3=1+i2,Hi=H[i],h=Hi[i3];if(h){for(j=0;j<n;j++){let j2=2*j,j3=1+j2,s=0,si=0
     for(k=0;k<i;k++){let k2=2*k,k3=1+k2;s+=Hi[k2]*z[k][j2]-Hi[k3]*z[k][j3];si+=Hi[k2]*z[k][j3]+Hi[k3]*z[k][j2]}
     s=(s/h)/h;si=(si/h)/h;for(k=0;k<i;k++){let k2=2*k,k3=1+k2;z[k][j2]+=-s*Hi[k2]-si*Hi[k3];z[k][j3]+=-si*Hi[k2]+s*Hi[k3]}}}}}
+    
+let geih=(A,B)=>{ //general evp A:hermitian, B:real, pos def banded
+ let L=chob(B),V=reducb(A,L) }
+
+/*
+let reduch=(A,L)=>{let i,j,k,xr,xi,y,n=A.length   //overwrite lower A with inv(L)*A*inv(L')  A is complex but L is real!
+ for(i=0;i<n;i++){
+  y=L[i][i];
+  for(j=i;j<n;j++){
+   xr=A[i][2*j  ];
+   xi=A[i][2*j+1];
+   for(k=0;k<i;k++){
+    xr-=L[i][k]*A[j][2*k];
+    xi-=L[i][k]*A[j][2*k+1];
+   }
+   A[j][2*i  ]=xr/y
+   A[j][2*i+1]=xi/y
+  }
+ }
+ for(j=0;j<n;j++){
+  for(i=j;i<n;i++){
+   xr=A[i][2*j];
+   xi=A[i][2*j+1];
+   if(i>j)for(k=j;k<i;k++){
+    xr-=A[k][2*j  ]*L[i][k];
+    xi-=A[k][2*j+1]*L[i][k];
+   }
+   for(k=0;k<j;k++){
+    xr-=A[j][2*k  ]*L[i][k];
+    xi-=A[j][2*k+1]*L[i][k];
+   }
+   A[i][2*j  ]=xr/L[i][i]
+   A[i][2*j+1]=xi/L[i][i]
+  }
+ }
+ return A    //maybe this does not work because the imag part is skew symmetric.
+}
+*/
+
+let reduch=(A,L)=>{  //overwrite lower A with inv(L)*A*inv(L')  A is complex but L is real!
+ let n=A.length,ar,ai,b,tr,ti
+ for(let k=0;k<n;k++){let k2=2*k,k3=1+k2
+  ar=A[k][k2];ai=A[k][k3];b=L[k][k];ar/=b*b;ai/=b*b;A[k][k2]=ar;A[k][k3]=ai
+  if(k<N-1){
+   for(j=1+k;j<n;j++)A[j][k2]/=b //zdscal
+   tr=-0.5*ar;ti=-0.5*ai
+   for(j=1+k;j<n;j++){A[j][k2]+=tr*L[j][k];A[j][k3]+=ti*L[j][k]} //zaxpy
+   //zher2
+   //zaxpy
+   //ztrsv
+  }
+ }
+}
+
+/* ZHER2...
+               DO 60 j = 1,n
+                  IF ((x(j).NE.zero) .OR. (y(j).NE.zero)) THEN
+                      temp1 = alpha*dconjg(y(j))
+                      temp2 = dconjg(alpha*x(j))
+                      a(j,j) = dble(a(j,j)) + dble(x(j)*temp1+y(j)*temp2)
+                      DO 50 i = j + 1,n
+                          a(i,j) = a(i,j) + x(i)*temp1 + y(i)*temp2
+   50                 CONTINUE
+                  ELSE
+                      a(j,j) = dble(a(j,j))
+                  END IF
+   60         CONTINUE
+*/
+
+/*
+* Compute inv(L)*A*inv(L**H)
+  DO 20 K = 1, N
+*    Update the lower triangle of A(k:n,k:n)
+     AKK = A( K, K )
+     BKK = B( K, K )
+     AKK = AKK / BKK**2
+     A( K, K ) = AKK
+     IF( K.LT.N ) THEN
+        CALL ZDSCAL( N-K, ONE / BKK, A( K+1, K ), 1 )
+        CT = -HALF*AKK
+        CALL ZAXPY( N-K, CT, B( K+1, K ), 1, A( K+1, K ), 1 )
+        CALL ZHER2( UPLO, N-K, -CONE, A( K+1, K ), 1, B( K+1, K ), 1, A( K+1, K+1 ), LDA )
+        CALL ZAXPY( N-K, CT, B( K+1, K ), 1, A( K+1, K ), 1 )
+        CALL ZTRSV( UPLO, 'No transpose', 'Non-unit', N-K, B( K+1, K+1 ), LDB, A( K+1, K ), 1 )
+     END IF
+  20 CONTINUE  */
+
+let A,B
+B=[[ 4,    2,   -6,    0,    0,    0],
+   [ 2,    2,   -3,    2,    0,    0],
+   [-6,   -3,   13,    2,   -2,    0],
+   [ 0,    2,    2,   14,    5,    3],
+   [ 0,    0,   -2,    5,    6,    0],
+   [ 0,    0,    0,    3,    0,    6]].map(x=>new Float64Array(x))
+
+A=[[0, + 0,   0, + 1,   0, - 2,   2, + 0,   1, + 0,   0, + 0],
+   [0, - 1,   0, + 0,   0, - 3,   1, + 0,   3, + 0,  -1, + 0],
+   [0, + 2,   0, + 3,   0, + 0,   0, + 0,  -1, + 0,   2, + 0],
+   [2, + 0,   1, + 0,   0, + 0,   0, + 0,   0, + 0,   0, + 0],
+   [1, + 0,   3, + 0,  -1, + 0,   0, + 0,   0, + 0,   0, + 0],
+   [0, + 0,  -1, + 0,   2, + 0,   0, + 0,   0, + 0,   0, + 0]].map(x=>new Float64Array(x))
+let L=chol(B)
+let C=reduch(A,L)
+console.log("C",C.map(x=>Array.from(x).map(x=>x.toFixed(3)).join(" ")))
+
+
+/*
+B=[ 4    2   -6    0    0    0
+    2    2   -3    2    0    0
+   -6   -3   13    2   -2    0
+    0    2    2   14    5    3
+    0    0   -2    5    6    0
+    0    0    0    3    0    6]
+L=chol(B,"lower")
+G=[0 1 -2
+  -1 0 -3
+   2 3  0];
+K=[2 1 0
+   1 3 -1
+   0 -1 2];
+Z=zeros(3,3);
+A=[i*G K;K Z]
+C=inv(L)*A*inv(L)'
+*/
+
 
 let lsqz=(A,b)=>qrzsolve(qrz(A),b)
 let qrz=A=>{A=copy(A);const n=A.length,m2=A[0].length
