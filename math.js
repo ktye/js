@@ -7,6 +7,7 @@ let eyez=n=>Array(n).fill(0).map((_,i)=>{let r=new Float64Array(2*n);r[2*i]=1;re
 let rand=(m,n)=>n==undefined?new Float64Array(m).map(x=>random()):Array(m).fill([]).map(x=>new Float64Array(n).map(x=>random()))
 let grade=(x, r)=>Array.from(x.keys()).sort((a,b)=>x[a]-x[b])
 let copy=x=>Array.isArray(x)?x.map(copy):x.map(x=>x)
+let tranz=A=>{let i,j,m=A.length,n=A[0].length/2,B=Array(n).fill(0).map(x=>new Float64Array(2*m));for(i=0;i<m;i++){let Ai=A[i],i2=2*i,i3=1+i2;for(j=0;j<n;j++){B[j][i2]=Ai[2*j];B[j][i3]=Ai[1+2*j]}};return B}
 
 let  dot=(u,v)=>{let n=u.length,r=0;for(let i=0;i<n;i++)r+=u[i]*v[i];return r}
 let zdot=(u,v)=>{let r=new Float64Array(2);for(let i=0;i<u.length;i+=2){r[0]+=u[i]*v[i]+u[1+i]*v[1+i];r[1]+=-u[1+i]*v[i]+u[i]*v[1+i]};return r}
@@ -47,6 +48,9 @@ let chol=A=>{A=copy(A);let n=A.length,i,j,k,s;for(i=0;i<n;i++){for(j=0;j<=i;j++)
 let chob=A=>{A=copy(A);let m=A.length,n=A[0].length,h=(m-1)/2,i,j,k,s;for(i=0;i<n;i++){for(j=max(0,i-h);j<=i;j++){s=A[h+i-j][j];for(k=max(0,i-h);k<j;k++)s-=A[h+i-k][k]*A[h+j-k][k];A[h+i-j][j]=i>j?s/A[h][j]:sqrt(s)}};return A}
 let cholsolve=(L,b)=>{b=copy(b);let n=L.length,i,j;for(i=0;i<n;i++){for(j=0;j<i;j++)b[i]-=L[i][j]*b[j];b[i]/=L[i][i]};for(i=n-1;i>=0;i--){for(j=1+i;j<n;j++)b[i]-=L[j][i]*b[j];b[i]/=L[i][i]};return b;}
 let chobsolve=(L,b)=>{b=copy(b);let m=L.length,n=L[0].length,h=(m-1)/2,i,j;for(i=0;i<n;i++){for(j=max(0,i-h);j<i;j++)b[i]-=L[h+i-j][j]*b[j];b[i]/=L[h][i]};for(i=n-1;i>=0;i--){for(j=1+i;j<min(i+h+1,n);j++)b[i]-=L[h+j-i][i]*b[j];b[i]/=L[h][i]};return b;}
+let lsolvez=(L,b)=>{b=b.slice();let n=L.length,i,j;for(i=0;i<n;i++){let i2=2*i,i3=1+i2;for(j=0;j<i;j++){b[i2]-=L[i][j]*b[2*j];b[i3]-=L[i][j]*b[1+2*j]};b[i2]/=L[i][i];b[i3]/=L[i][i]};return b;} //L:real b:complex vector
+let lbsolvez =(L,b)=>{b=b.slice();let m=L.length,n=L[0].length,h=(m-1)/2,i,j;for(i=0;  i<n; i++){let i2=2*i,i3=1+i2;for(j=max(0,i-h);  j<i;  j++){b[i2]-=L[h+i-j][j]*b[2*j];b[i3]-=L[h+i-j][j]*b[1+2*j]};b[i2]/=L[h][i];b[i3]/=L[h][i]};return b} //L:real banded, b:complex vector, forward propagation
+let ltbsolvez=(L,b)=>{b=b.slice();let m=L.length,n=L[0].length,h=(m-1)/2,i,j;for(i=n-1;i>=0;i--){let i2=2*i,i3=1+i2;for(j=1+i;j<min(i+h+1,n);j++){b[i2]-=L[h+j-i][i]*b[2*j];b[i3]-=L[h+j-i][i]*b[1+2*j]};b[i2]/=L[h][i];b[i3]/=L[h][i]};return b} //L:real banded, b:complex vector, back propagation
 
 let eigs=A=>(A=copy(A),tql2(A,...tred2(A))) //real sym
 let gevp=(A,B)=>{A=copy(A);let L=chob(B),V=reducb(A,L),x=eig(V);return[x,ltsolve2(L,V)]}  //general evp A,B>0 both real sym
@@ -97,91 +101,10 @@ let htribk=(H,t,z)=>{let n=H.length,t1=t[0],t2=t[1],i,j,k;
     for(k=0;k<i;k++){let k2=2*k,k3=1+k2;s+=Hi[k2]*z[k][j2]-Hi[k3]*z[k][j3];si+=Hi[k2]*z[k][j3]+Hi[k3]*z[k][j2]}
     s=(s/h)/h;si=(si/h)/h;for(k=0;k<i;k++){let k2=2*k,k3=1+k2;z[k][j2]+=-s*Hi[k2]-si*Hi[k3];z[k][j3]+=-si*Hi[k2]+s*Hi[k3]}}}}}
     
-let geih=(A,B)=>{ //general evp A:hermitian, B:real, pos def banded
- let L=chob(B),V=reducb(A,L) }
+let geih=(A,B)=>{let L=chob(B),C=reduzb(A,L),[w,Y]=eigh(C);return[w,ltbsolvez(L,Y)]} //general evp A:hermitian, B:real, pos def banded
+let reduzb=(A,L)=>tranz(tranz(A.map(x=>lbsolvez(L,x))).map(x=>lbsolvez(L,x))) //C=L^-1 A L^-T => L\(L\A^T)^T    L:real band, A:complex
 
-/*
-let reduch=(A,L)=>{let i,j,k,xr,xi,y,n=A.length   //overwrite lower A with inv(L)*A*inv(L')  A is complex but L is real!
- for(i=0;i<n;i++){
-  y=L[i][i];
-  for(j=i;j<n;j++){
-   xr=A[i][2*j  ];
-   xi=A[i][2*j+1];
-   for(k=0;k<i;k++){
-    xr-=L[i][k]*A[j][2*k];
-    xi-=L[i][k]*A[j][2*k+1];
-   }
-   A[j][2*i  ]=xr/y
-   A[j][2*i+1]=xi/y
-  }
- }
- for(j=0;j<n;j++){
-  for(i=j;i<n;i++){
-   xr=A[i][2*j];
-   xi=A[i][2*j+1];
-   if(i>j)for(k=j;k<i;k++){
-    xr-=A[k][2*j  ]*L[i][k];
-    xi-=A[k][2*j+1]*L[i][k];
-   }
-   for(k=0;k<j;k++){
-    xr-=A[j][2*k  ]*L[i][k];
-    xi-=A[j][2*k+1]*L[i][k];
-   }
-   A[i][2*j  ]=xr/L[i][i]
-   A[i][2*j+1]=xi/L[i][i]
-  }
- }
- return A    //maybe this does not work because the imag part is skew symmetric.
-}
-*/
 
-let reduch=(A,L)=>{  //overwrite lower A with inv(L)*A*inv(L')  A is complex but L is real!
- let n=A.length,ar,ai,b,tr,ti
- for(let k=0;k<n;k++){let k2=2*k,k3=1+k2
-  ar=A[k][k2];ai=A[k][k3];b=L[k][k];ar/=b*b;ai/=b*b;A[k][k2]=ar;A[k][k3]=ai
-  if(k<N-1){
-   for(j=1+k;j<n;j++)A[j][k2]/=b //zdscal
-   tr=-0.5*ar;ti=-0.5*ai
-   for(j=1+k;j<n;j++){A[j][k2]+=tr*L[j][k];A[j][k3]+=ti*L[j][k]} //zaxpy
-   //zher2
-   //zaxpy
-   //ztrsv
-  }
- }
-}
-
-/* ZHER2...
-               DO 60 j = 1,n
-                  IF ((x(j).NE.zero) .OR. (y(j).NE.zero)) THEN
-                      temp1 = alpha*dconjg(y(j))
-                      temp2 = dconjg(alpha*x(j))
-                      a(j,j) = dble(a(j,j)) + dble(x(j)*temp1+y(j)*temp2)
-                      DO 50 i = j + 1,n
-                          a(i,j) = a(i,j) + x(i)*temp1 + y(i)*temp2
-   50                 CONTINUE
-                  ELSE
-                      a(j,j) = dble(a(j,j))
-                  END IF
-   60         CONTINUE
-*/
-
-/*
-* Compute inv(L)*A*inv(L**H)
-  DO 20 K = 1, N
-*    Update the lower triangle of A(k:n,k:n)
-     AKK = A( K, K )
-     BKK = B( K, K )
-     AKK = AKK / BKK**2
-     A( K, K ) = AKK
-     IF( K.LT.N ) THEN
-        CALL ZDSCAL( N-K, ONE / BKK, A( K+1, K ), 1 )
-        CT = -HALF*AKK
-        CALL ZAXPY( N-K, CT, B( K+1, K ), 1, A( K+1, K ), 1 )
-        CALL ZHER2( UPLO, N-K, -CONE, A( K+1, K ), 1, B( K+1, K ), 1, A( K+1, K+1 ), LDA )
-        CALL ZAXPY( N-K, CT, B( K+1, K ), 1, A( K+1, K ), 1 )
-        CALL ZTRSV( UPLO, 'No transpose', 'Non-unit', N-K, B( K+1, K+1 ), LDB, A( K+1, K ), 1 )
-     END IF
-  20 CONTINUE  */
 
 let A,B
 B=[[ 4,    2,   -6,    0,    0,    0],
@@ -191,18 +114,40 @@ B=[[ 4,    2,   -6,    0,    0,    0],
    [ 0,    0,   -2,    5,    6,    0],
    [ 0,    0,    0,    3,    0,    6]].map(x=>new Float64Array(x))
 
-A=[[0, + 0,   0, + 1,   0, - 2,   2, + 0,   1, + 0,   0, + 0],
-   [0, - 1,   0, + 0,   0, - 3,   1, + 0,   3, + 0,  -1, + 0],
-   [0, + 2,   0, + 3,   0, + 0,   0, + 0,  -1, + 0,   2, + 0],
-   [2, + 0,   1, + 0,   0, + 0,   0, + 0,   0, + 0,   0, + 0],
-   [1, + 0,   3, + 0,  -1, + 0,   0, + 0,   0, + 0,   0, + 0],
-   [0, + 0,  -1, + 0,   2, + 0,   0, + 0,   0, + 0,   0, + 0]].map(x=>new Float64Array(x))
+A=[[-1,+5,  2,-1,  2,+4,  2,-3, -5,+3,  5,-4],
+   [-1,+4,  5,-3, -4,-3,  5,-3,  1,+2, -4, 2],
+   [-4,-4, -2,+1,  0,-1,  2,-1,  2,-4,  4,-0],
+   [-3,-5, -4,+5, -3,+4,  4,-1,  1,-3, -4,+2],
+   [ 2,-1,  2,+2,  5,+3, -1,+3,  3,-0, -3,-2],
+   [ 5,-5, -3,+3,  0,-3,  4,+4,  4,-4,  3,-5]].map(x=>new Float64Array(x))
 let L=chol(B)
-let C=reduch(A,L)
-console.log("C",C.map(x=>Array.from(x).map(x=>x.toFixed(3)).join(" ")))
+let LB=[[NaN, NaN, NaN, NaN, NaN, NaN],
+        [NaN, NaN, NaN, NaN, NaN, NaN],
+        [ 2, 1, 2, 3,  1, 1],
+        [ 1, 0, 1, 2, -2, 0],
+	[-3, 2,-1, 1,  0, 0]]
+let printmat=(s,A)=>console.log(s,A.map(x=>Array.from(x).map(x=>x.toFixed(2).padStart(5," ")).join(" ")))
+
+printmat("L",L)
+printmat("A",A)
+printmat("AT",tranz(A))
+
+//let C=A.map(x=>lbsolvez(LB,x))
+let C=reduzb(A,LB)
+printmat("C",C)
+
 
 
 /*
+A=[-1+5i  2-1i  2+4i  2-3i -5+3i  5-4i
+   -1+4i  5-3i -4-3i  5-3i  1+2i -4+2i
+   -4-4i -2+1i  0-1i  2-1i  2-4i  4-0i
+   -3-5i -4+5i -3+4i  4-1i  1-3i -4+2i
+    2-1i  2+2i  5+3i -1+3i  3-0i -3-2i
+    5-5i -3+3i  0-3i  4+4i  4-4i  3-5i];
+
+
+
 B=[ 4    2   -6    0    0    0
     2    2   -3    2    0    0
    -6   -3   13    2   -2    0
