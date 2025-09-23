@@ -101,70 +101,9 @@ let htribk=(H,t,z)=>{let n=H.length,t1=t[0],t2=t[1],i,j,k;
     for(k=0;k<i;k++){let k2=2*k,k3=1+k2;s+=Hi[k2]*z[k][j2]-Hi[k3]*z[k][j3];si+=Hi[k2]*z[k][j3]+Hi[k3]*z[k][j2]}
     s=(s/h)/h;si=(si/h)/h;for(k=0;k<i;k++){let k2=2*k,k3=1+k2;z[k][j2]+=-s*Hi[k2]-si*Hi[k3];z[k][j3]+=-si*Hi[k2]+s*Hi[k3]}}}}}
     
-let geih=(A,B)=>{let L=chob(B),C=reduzb(A,L),[w,Y]=eigh(C);return[w,ltbsolvez(L,Y)]} //general evp A:hermitian, B:real, pos def banded
-let reduzb=(A,L)=>tranz(tranz(A.map(x=>lbsolvez(L,x))).map(x=>lbsolvez(L,x))) //C=L^-1 A L^-T => L\(L\A^T)^T    L:real band, A:complex
+let geih=(A,B)=>{let L=chob(B),C=reduzb(A,L),[w,Y]=eigh(C),VT=tranz(Y).map(b=>ltbsolvez(L,b));return[w,VT]} //general evp A:hermitian, B:real, pos def banded
+let reduzb=(A,L)=>tranz(tranz(A.map(x=>lbsolvez(L,x))).map(x=>lbsolvez(L,x)))           //C=L^-1 A L^-T => L\(L\A^T)^T    L:real band, A:complex
 
-
-
-let A,B
-B=[[ 4,    2,   -6,    0,    0,    0],
-   [ 2,    2,   -3,    2,    0,    0],
-   [-6,   -3,   13,    2,   -2,    0],
-   [ 0,    2,    2,   14,    5,    3],
-   [ 0,    0,   -2,    5,    6,    0],
-   [ 0,    0,    0,    3,    0,    6]].map(x=>new Float64Array(x))
-
-A=[[-1,+5,  2,-1,  2,+4,  2,-3, -5,+3,  5,-4],
-   [-1,+4,  5,-3, -4,-3,  5,-3,  1,+2, -4, 2],
-   [-4,-4, -2,+1,  0,-1,  2,-1,  2,-4,  4,-0],
-   [-3,-5, -4,+5, -3,+4,  4,-1,  1,-3, -4,+2],
-   [ 2,-1,  2,+2,  5,+3, -1,+3,  3,-0, -3,-2],
-   [ 5,-5, -3,+3,  0,-3,  4,+4,  4,-4,  3,-5]].map(x=>new Float64Array(x))
-let L=chol(B)
-let LB=[[NaN, NaN, NaN, NaN, NaN, NaN],
-        [NaN, NaN, NaN, NaN, NaN, NaN],
-        [ 2, 1, 2, 3,  1, 1],
-        [ 1, 0, 1, 2, -2, 0],
-	[-3, 2,-1, 1,  0, 0]]
-let printmat=(s,A)=>console.log(s,A.map(x=>Array.from(x).map(x=>x.toFixed(2).padStart(5," ")).join(" ")))
-
-printmat("L",L)
-printmat("A",A)
-printmat("AT",tranz(A))
-
-//let C=A.map(x=>lbsolvez(LB,x))
-let C=reduzb(A,LB)
-printmat("C",C)
-
-
-
-/*
-A=[-1+5i  2-1i  2+4i  2-3i -5+3i  5-4i
-   -1+4i  5-3i -4-3i  5-3i  1+2i -4+2i
-   -4-4i -2+1i  0-1i  2-1i  2-4i  4-0i
-   -3-5i -4+5i -3+4i  4-1i  1-3i -4+2i
-    2-1i  2+2i  5+3i -1+3i  3-0i -3-2i
-    5-5i -3+3i  0-3i  4+4i  4-4i  3-5i];
-
-
-
-B=[ 4    2   -6    0    0    0
-    2    2   -3    2    0    0
-   -6   -3   13    2   -2    0
-    0    2    2   14    5    3
-    0    0   -2    5    6    0
-    0    0    0    3    0    6]
-L=chol(B,"lower")
-G=[0 1 -2
-  -1 0 -3
-   2 3  0];
-K=[2 1 0
-   1 3 -1
-   0 -1 2];
-Z=zeros(3,3);
-A=[i*G K;K Z]
-C=inv(L)*A*inv(L)'
-*/
 
 
 let lsqz=(A,b)=>qrzsolve(qrz(A),b)
