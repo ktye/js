@@ -87,7 +87,7 @@ let htridi=H=>{let n=H.length,d=new Float64Array(n),e=d.slice(),e2=d.slice(),t1=
    if(f){
     t1[i-1]=(Hi[1+i_]*t2[i]-Hi[i_]*t1[i])/f;si=(Hi[i_]*t2[i]+Hi[1+i_]*t1[i])/f;h+=f*g;g=1+g/f;Hi[i_]*=g;Hi[1+i_]*=g
     if(i==1){for(k=0;k<i2;k++)Hi[k]*=sc;t2[i-1]=-si;hh=d[i];d[i]=Hi[i2];Hi[i2]=hh;Hi[i3]=sc*sqrt(h);continue}
-   }else{t1[i-1]-t1[i];si=t2[i];Hi[i_]=g} 
+   }else{t1[i-1]=-t1[i];si=t2[i];Hi[i_]=g}
    f=0;for(j=0;j<i;j++){let j2=2*j,j3=1+j2; g=0;gi=0;
     for(k=0;k<=j;k++){let k2=2*k,k3=1+k2;g+=H[j][k2]*Hi[k2]+H[j][k3]*Hi[k3];gi+=-H[j][k2]*Hi[k3]+H[j][k3]*Hi[k2]}
     for(k=1+j;k<i;k++){let k2=2*k,k3=1+k2;g+=H[k][j2]*Hi[k2]-H[k][j3]*Hi[k3];gi+=-H[k][j2]*Hi[k3]-H[k][j3]*Hi[k2]}
