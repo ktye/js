@@ -1,0 +1,102 @@
+<html><head><title>ta</title><style>
+
+*{font-family:monospace}
+body{height:100vh;width:100vw;border:none;margin:0;overflow:hidden}
+table,tr{border:none}
+th{line-height:1em;border-top:1px solid #ccc;border-left:1px solid #ccc;border-right:1px solid transparent;border-bottom:1px solid transparent;background:#ddd}
+td{line-height:1em;border-top:1px solid #ccc;border-left:1px solid #ccc;border-right:1px solid transparent;border-bottom:1px solid transparent;white-space:nowrap;overflow:hidden}
+/*table{border-collapse:collapse}*/
+td{min-width:6ch;text-align:right}
+.bt{border-top:1px solid red;border-top-width:1px}
+.tb{background:#aaa}
+.bb{border-bottom:1px solid red;border-bottom-width:1px}
+.bl{border-left:1px solid red;border-left-width:1px}
+.br{border-right:1px solid red;border-right-width:1px}
+.top{position:sticky;top:0}
+.lef{position:sticky;left:0}
+input{/*width:fit-content*/width:5ch;outline:none;border:none;background:#ffe;padding:0;line-height:1em}
+#T{table-layout:fixed}
+#dot{position:absolute;background:black;padding:1px;width:1px;height:1px;cursor:crosshair;z-index:1}
+
+</style></head><body>
+
+<div style="height:calc(100% - 2em);width:100%;overflow:auto">
+ <table id="T" cellspacing="0" rowspacing="0" tabindex="0"></table>
+ <div id="dot"></div>
+</div>
+<div style="position:fixed;left:0;bottom:0;width:100%;height:2em">
+<button onclick="addrow(T)">add row</button>
+<button onclick="addcol(T)">add col</button>
+</div>
+
+
+<script>
+
+let t={_ignore:3};"ABCDEFGH".split("").forEach(x=>t[x]=Array(30).fill(0).map(x=>(10*Math.random()).toFixed(3)));
+
+
+// editable table, copy-paste, drop corner, ..
+
+let af=Array.from,qa=(x,y)=>x.querySelectorAll(y)
+let ce=x=>document.createElement(x),tc=(t,x)=>(x.textContent=t,x),cl=(c,x)=>(x.classList.add(c),x),tn=t=>document.createTextNode(t),ac=(c,x)=>(x.appendChild(c),x)
+let oc=(f,x)=>(x.onclick=f,x),pd=e=>e.preventDefault()
+
+let tr=(a, r)=>(r=ce("tr"),a.map(x=>ac(x,r)),r),tt=t=>tc(t,cl("top",ce("th"))),tl=i=>tc(i,cl("lef",ce("th"))),td=t=>tc(t,ce("td"))
+
+let addrow=T=>{let i=T.rows.length,nc=T.rows[0].children.length;ac(tr([tl(i),...Array(nc-1).fill(0).map(c=>td(""))]),T)}
+let newnam=T=>{let a=af(T.rows[0].children).map(x=>x.textContent),s,i=a.length;while(++i){s="col"+i;if(!a.includes(s))return s}}
+let addcol=T=>{let n=T.rows.length,nc=T.rows[0].children.length;for(let i=0;i<n;i++)ac(ce(i?"td":"th"),T.rows[i]);tc(newnam(T),T.rows[0].children[nc])}
+
+let ta=(t,T)=>{
+ let at=(i,j)=>T.rows[i].children[j]
+ let _S=[1,1,1,1],S=[1,1,1,1] //selected rectangle [r0,r1,c0,c1], e.g. first row: [0,1,0,nc]
+ let mm1=x=>{let s=x.map(x=>Math.max(1,x)),m=(x,y)=>x>y?[y,x]:[x,y];return[...m(s[0],s[1]),...m(s[2],s[3])]}
+ let mm2=x=>{let r=T.rows,n=r.length-1,m=r[0].children.length-1;return[...[x[0],x[1]].map(x=>Math.min(n,x)),...[x[2],x[3]].map(x=>Math.min(m,x))]}
+ let mark=_=>{S=mm2(S);_S=mm2(_S);
+  let f=s=>{s=s.slice();if(0==s[0]+s[1]){s[0]=1;s[1]=T.rows.length-1};if(0==s[2]+s[3]){s[2]=1;s[3]=T.rows[0].children.length-1};return s}
+  let m=(s,rm)=>{let[a,b,c,d]=mm1(s)
+   r=T.rows[a].children;for(let j=c;j<=d;j++){r[j].classList[rm]("bt");T.rows[0].children[j].classList[rm]("tb")}
+   r=T.rows[b].children;for(let j=c;j<=d;j++){r[j].classList[rm]("bb")}
+   for(let i=a;i<=b;i++){T.rows[i].children[c].classList[rm]("bl");T.rows[i].children[0].classList[rm]("tb");}
+   for(let i=a;i<=b;i++){T.rows[i].children[d].classList[rm]("br");}
+   if(rm=="add"){q=T.rows[b].children[d].getBoundingClientRect();dot.style.left=(q.left+q.width-2)+"px";dot.style.top=(q.top+q.height-2)+"px"}
+  };m(f(_S),"remove");m(f(S),"add");_S=S.slice()}
+ let c=Object.keys(t).filter(x=>x[0]!="_"),nc=c.length,nr=t[c[0]].length;
+ ac(tr([tt(""),...c.map(tt)]),T)
+ for(let i=0;i<nr;i++)ac(tr([tl(i),...c.map(c=>td(t[c][i]))]),T)
+
+ let delr=(a,b)=>{[a,b]=a>b?[b,a]:[a,b];for(let i=b;i>=a;i--)T.rows[i].remove();for(let i=a;i<T.rows.length;i++)T.rows[i].firstChild.textContent=i-1;mark()}
+ let delc=(a,b)=>{[a,b]=a>b?[b,a]:[a,b];for(let i=0;i<T.rows.length;i++){let r=T.rows[i];for(let j=b;j>=a;j--)r.children[j].remove()};mark()}
+ let del=s=>{let[a,b,c,d]=mm1(s),i,j,r;for(i=a;i<=b;i++){r=T.rows[i];for(j=c;j<=d;j++)r.children[j].textContent=""}}
+
+ let cpy=async _=>{let s=mm1(S),i,j,a,r,q=[];for(i=s[0];i<=s[1];i++){r=T.rows[i].children;a=[];for(j=s[2];j<=s[3];j++)a.push(r[j].textContent);q.push(a.join("\t"))}
+  return await navigator.clipboard.writeText(q.join("\r\n"))}
+ let pas=async _=>{let[a,_a,b]=mm1(S),n,m,it,jt,i,j,v,r,t=await navigator.clipboard.readText();t=t.split(/\r*\n/);n=t.length;
+  for(i=a;i<a+t.length;i++){if(i==T.rows)addrow(T);r=T.rows[i].children;v=t[i-a].split("\t");m=v.length;
+   for(j=b;j<b+v.length;j++){if(j==r.length){addcol(T);r=T.rows[i].children};r[j].textContent=v[j-b];}};S=[a,a+n-1,b,b+m-1];mark()}
+
+ let ji=(x, r)=>[af((r=x.parentElement).children).indexOf(x),af(T.children).indexOf(r)]
+ let kk=t=>{n=t.nodeName,s=t.textContent,q=ce("input"),[j,i]=ji(t),right=t.nextElementSibling,next=T.children[1+i];if(next)next=next.children[j];
+  if(t.classList.contains("lef"))return;q.value=s;t.replaceChildren(q)
+  let f=(I,J)=>{t.textContent=q.value;let r=T.rows;if(I<0||J<0)return;I==T.rows.length?addrow(T):J==T.rows[0].childElementCount?addcol(T):0;kk(at(I,J))}
+  q.onkeydown=e=>"Escape"==e.key?(pd(e),(t.textContent=s)) :"Tab"==e.key?(pd(e),f(i,j+1-2*e.shiftKey)) :"Enter"==e.key?(pd(e),f(i+1-2*e.shiftKey,j)) :0
+  q.onblur=e=>t.replaceChildren(tn(e.target.value))
+  q.focus();q.select()}
+ T.ondblclick=e=>kk(e.target)
+ T.onkeydown=e=>{if(e.target!=T)return;
+  let rm=_=>(pd(e),0==S[0]+S[1]?delc(S[2],S[3]):0==S[2]+S[3]?delr(S[0],S[1]):del(S))
+  if("Delete"==e.key)return rm()
+  if(e.ctrlKey)return"c"==e.key?(pd(e),cpy()):"z"==e.key?(cpy,rm()):"v"==e.key?pas():0
+  let I,J,a="ArrowLeft ArrowRight ArrowUp ArrowDown".split(" "),i=a.indexOf(e.key);
+  if(-1<i){pd(e);[I,J]=[[0,-1],[0,1],[-1,0],[1,0]][i]; 
+  if(e.shiftKey){S[1]+=I;S[3]+=J}else{S[1]=S[0]+=I;S[3]=S[2]+=J}
+  mark()}
+ }
+ T.onmousedown=e=>{let t=e.target,n=t.nodeName,[j,i]=ji(t);pd(e);e.stopPropagation()
+  T.focus();
+  S=e.shiftKey?[S[0],i,S[2],j]:[i,i,j,j]
+  mark()}
+}
+
+ta(t,T)
+</script></body></html>
