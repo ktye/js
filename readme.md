@@ -132,5 +132,10 @@ function compress(u){ //see github.com/zhipeng-jia/snappyjs(0.7.0)
 ```js                               
 function s64u(u){let c=function(x){let r='';for(let i=0;i<x.length;i++)r+=String.fromCharCode(x[i]);return r};return btoa(c(u))}
 function u64s(s){let c=function(x){const r=new Uint8Array(x.length);for(let i=0;i<x.length;i++)r[i]=x.charCodeAt(i);return r};return c(atob(s))}
+//base85
+let un85=s=>{let o=[],i=0,c,b,j,k,L,p,v;while(i<s.length){c=s[i++];if(c=="z"){o.push(0,0,0,0);continue};
+ b=c;for(j=0;j<4&&i<s.length;j++)b+=s[i++];L=b.length;if(L<5)b+="u".repeat(5-L);v=0;for(k=0;k<5;k++){v=v*85+(b.charCodeAt(k)-33)};
+ p=[(v>>>24)&255,(v>>>16)&255,(v>>>8)&255,v&255];for(let m=0;m<(L-1);m++)o.push(p[m])};
+ return new Uint8Array(o)}
 ```                               
 </details>
