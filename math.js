@@ -111,6 +111,7 @@ let qrz=A=>{A=copy(A);const n=A.length,m2=A[0].length
  let d=new Float64Array(2*n)
  for(let j=0;j<n;j++){let j2=2*j,j3=1+j2,Aj=A[j]
   let s=norm(Aj.subarray(j2)),h=s/hypot(Aj[j2],Aj[j3]);d[j2]=-h*Aj[j2];d[j3]=-h*Aj[j3];let f=sqrt(s*(s+hypot(Aj[j2],Aj[j3])));Aj[j2]-=d[j2];Aj[j3]-=d[j3]
+  //better(Aii maybe 0): let s=norm(Aj.subarray(j2)),p=atan2(Aj[j3],Aj[j2]);d[j2]=-s*cos(p);d[j3]=-s*sin(p);let f=sqrt(s*(s+hypot(Aj[j2],Aj[j3])));Aj[j2]-=d[j2];Aj[j3]-=d[j3];
   for(let k=j2;k<m2;k++)Aj[k]/=f
   for(let i=1+j;i<n;i++){let a=0,b=0,Ai=A[i]
    for(let k2=j2;k2<m2;k2+=2){const k3=1+k2;a+=Aj[k2]*Ai[k2]+Aj[k3]*Ai[k3];b+=Aj[k2]*Ai[k3]-Aj[k3]*Ai[k2]}
