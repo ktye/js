@@ -53,6 +53,19 @@ dl.download="filename.txt"
 dl.click()
 ```
 </details>
+
+<details><summary>save/bundle</summary>
+Rewrite html page with updated data.
+```html
+<button onclick='save()'>save</button> <span id='filename'></span>
+```
+```js
+let Data={...}
+let saveh=0,save=async _=>{if(!saveh)saveh=await window.showSaveFilePicker({suggestedName:document.URL.split("/").slice(-1)[0],types:[{accept:{"text/html":[".html"]}}]});await wfile(saveh);filename.textContent=saveh.name}
+let wfile=async h=>{let t=bundle();let w=await h.createWritable();await w.write(t);await w.close()};
+let bundle=_=>document.querySelector("html").outerHTML.replace(/^let Data=.*$/m,"let Data="+JSON.stringify(Data));
+```
+</details>
  
 <details><summary>fetch multiple</summary>
  
