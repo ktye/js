@@ -2,6 +2,7 @@ let sin=Math.sin,cos=Math.cos,atan2=Math.atan2,sqrt=Math.sqrt,abs=Math.abs,hypot
 let zdiv=(xr,xi,yr,yi)=>{let r=0,d=0,e=0,f=0;if(abs(yr)>=abs(yi)){r=yi/yr;d=yr+r*yi;e=(xr+xi*r)/d;f=(xi-xr*r)/d}else{r=yr/yi;d=yi+r*yr;e=(xr*r+xi)/d;f=(xi*r-xr)/d};return[e,f]}
 let errif=(x,e)=>{if(x)throw new Error(e)}
 
+let copy=A=>{let r=A.slice();r.m=A.m;r.n=A.n;r.z=A.z;return r}
 let zeros=(m,n)=>{n=n||1;let r=new Float64Array(  m*n);r.m=m;r.n=n;return r}
 let zeroz=(m,n)=>{n=n||1;let r=new Float64Array(2*m*n);r.m=m;r.n=n;r.z=1;return r}
 let rand=(m,n)=>{let r=zeros(m,n),i;for(i=0;i<r.length;i++)r[i]=random();return r}
@@ -32,3 +33,20 @@ let smat=x=>{if(x.constructor!=Float64Array)return String(x);let colpad=(x,j)=>{
  if(x.m&&x.n){let m=min(20,x.m),n=min(20,x.n),z=x.z||0,r=[],i,j;for(i=0;i<m;i++){r[i]=[];for(j=0;j<n;j++)r[i][j]=z?znum(x[i*2*x.n+2*j],x[i*2*x.n+2*j+1]):snum(x[i*x.n+j])};for(j=0;j<n;j++)colpad(r,j);r=r.map(x=>x.join(" "));for(i=0;i<m;i++)r[i]+=x.n>20?"..\n":"\n";return r.join("")+(x.m>20?"..\n":"")}
  else return Array.from(x.subarray(0,min(x.length,20))).map(snum).join(" ")+(x.length>20?"..":"")}
  
+
+let qr=A=>{A=copy(A);const m=A.m,n=A.n,r=new Float64Array(n);
+ for(let c=0;c<n;c++){let n2=0;for(let i=c;i<m;i++){const v=A[i*n+c];n2+=v*v;}
+  if(n2==0){r[c]=0;continue;};const x0=A[c*n+c],n1=Math.sqrt(n2),s=x0>=0?1:-1,a=-s*n1,v0=x0-a;
+  r[c]=v0/a;A[c*n+c]=a;for(let i=c+1;i<m;i++){A[i*n+c]/=v0}
+  for(let j=c+1;j<n;j++){let w=A[c*n+j];for(let i=c+1;i<m;i++)w+=A[i*n+c]*A[i*n+j];
+   const sc=r[c]*w;A[c*n+j]-=sc;for(let i=c+1;i<m;i++){A[i*n+j]-=sc*A[i*n+c];}}};return[A,r]}
+let qrsolve=(Q,B)=>{
+ const QtB(A,T,B){const m=A.m,n=A.n,nr=B.n,Y=copy(B);
+  for(let c=n-1;c>=0;c--){const t=T[c];if(t==0)continue;
+   for(let r=0;r<nr;r++){let w=Y[c*nr+r];for(let i=c+1;i<m;i++)w+=A[i*n+c]*Y[i*nr+r];
+    const sc=t*w;Y[c*nr+r]-=sc;for(let i=c+1;i<m;i++)Y[i*nr+r]-=sc*A[i*n+c]}}
+  Y.m=n;Y=Y.subarray(0,n*nr);Y.m=n;Y.n=n;return Y}
+ const[A,t]=Q,Y=QtB(A,t,B),n=A.n,nr=B.n,X=zeros(n,nr);
+ for(let r=0;r<nr;r++){for(let i=n-1;i>=0;i--){let s=Y[i*nr+r];for(let j=i+1;j<n;j++)s-=A[i*n+j]*X[j*nr+r];X[i*nrhs+r]=s/A[i*n+i]}}
+ return X}
+
