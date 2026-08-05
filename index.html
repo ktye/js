@@ -1,37 +1,29 @@
-cat << EOF
 <!DOCTYPE html>
 <head><meta charset="utf-8">
-<link rel=icon href="../kelas16.png">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1">
 <title>js</title>
 <style>*{font-family:monospace;margin:0;border:none;padding:0;}
 body{overflow:hidden;height:100dvh;display:grid;grid-template-rows:auto 1fr}
-[contenteditable="true"]{background-color:#000;color:#fff;border:none;outline:none}
-#_i{flex-grow:1;min-height:4em;width:100vw;top:0;overflow:auto;resize:vertical}
-#_o{flex-grow:1;min-height:4em;background-color:#fff;width:100vw;bottom:0;overflow:auto}
+#_i{flex-grow:1;min-height:4em;background:#000;color:#fff;width:100vw;top:0;border:none;outline:none;overflow:auto;resize:vertical}
+#_o{flex-grow:1;min-height:4em;background:#fff;width:100vw;bottom:0;overflow:auto}
 .b:hover{cursor:pointer}
 .w{background:white;color:black}
 @media(orientation:portrait){*{font-size:x-large}}
 </style>
-<script>
-EOF
-
-cat math.js bench.js
-
-cat << EOF 
-</script>
+<script src="mat.js"></script>
 <script>
 
 let cols=()=>Math.floor(document.body.getBoundingClientRect().width/cw),
-_jdo=s=>{s=_i.innerText.trim();
- if(s){
-  _o.textContent=form(eval(s));
+_deb=(s,x)=>{let _=`${s}: ${smat(x)}`;console.log(_);_o.textContent+=_+"\n";return x},
+_jdo=s=>{s=_i.value.trim();
+ if(s){_o.textContent=""
+  s=s.replace(/^\\([A-Za-z]+)(.*)/gm, (_,n,r)=>`_deb("${n}",${n}${r})`)
+  let _=smat(eval(s));_o.textContent+=_
 }}
 
 window.init=()=>{_jdo()
- let f=window.location.hash;if(f)_i.innerText=decodeURIComponent(f.slice(1))
- _i.onblur=e=>{if(!_o.textContent)_jdo()}
- _i.oninput=e=>_o.textContent=""
+ _i.onchange=_jdo
+ //_i.oninput=e=>_o.textContent=""
 }
 window.oncontextmenu=e=>{e.preventDefault();e.stopPropagation();let s=window.getSelection();
  if(s.toString().length)lastsel=s.getRangeAt(0) //rightclick sometimes clears the current selection
@@ -44,14 +36,20 @@ window.onunhandledrejection=e=>{_o.textContent+="\n"+e.reason+"\n";console.log(e
 </head>
 
 <body onload="window.init()">
-<pre id="_i" contenteditable="true" spellcheck="false" autofocus></pre>
+<textarea id="_i" spellcheck="false" autofocus>
+A=mats(`0.058010 0.192811 0.193499
+0.371766 0.730570 0.295744
+0.943092 0.832548 0.378474
+0.360559 0.824505 0.039251`)
+B=mats(`0.088709 0.038510
+0.917070 0.357073
+0.050915 0.366591
+0.158673 0.798130`)
+Q=qr(A)
+Q[0]
+</textarea>
 <pre id="_o">
-EOF
-
-cat math.js bench.js | sed 1d | sed -n 's/^let \([a-z][a-z0-9]*\)=.*/\1/p' | tr '\n' ' ' | fmt
-
-cat << EOF
-</pre></pre>
+</pre>
 <span id="measure" style="position:absolute;top:0;z-index:-1">0123456789</span>
 </body></html>
-EOF
+
